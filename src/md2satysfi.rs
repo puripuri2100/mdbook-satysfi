@@ -63,9 +63,7 @@ fn parser_to_code(
           f.write_all(b"+listing {\n").unwrap();
           stack.push(TextMode::List);
         }
-        Tag::Item => {
-          f.write_all(b"* ").unwrap();
-        }
+        Tag::Item => f.write_all(b"* ").unwrap(),
         Tag::FootnoteDefinition(_text) => {}
         Tag::Table(alignment_list) => {
           let alignment_text: String = alignment_list
@@ -88,12 +86,8 @@ fn parser_to_code(
           stack.push(TextMode::Table);
         }
         Tag::TableHead => {}
-        Tag::TableRow => {
-          f.write_all(b"\n").unwrap();
-        }
-        Tag::TableCell => {
-          f.write_all(b"|").unwrap();
-        }
+        Tag::TableRow => f.write_all(b"\n").unwrap(),
+        Tag::TableCell => f.write_all(b"|").unwrap(),
         Tag::Emphasis => {
           f.write_all(b"\\emph {").unwrap();
           stack.push(TextMode::Inline);
@@ -145,9 +139,7 @@ fn parser_to_code(
           f.write_all(b"}\n").unwrap();
           stack.pop();
         }
-        Tag::Item => {
-          f.write_all(b"\n").unwrap();
-        }
+        Tag::Item => f.write_all(b"\n").unwrap(),
         Tag::FootnoteDefinition(_) => {}
         Tag::Table(_) => {
           f.write_all(b"|}}\n").unwrap();
@@ -198,12 +190,8 @@ fn parser_to_code(
           .unwrap();
       }
       Event::SoftBreak => {} //s.push(' '),
-      Event::HardBreak => {
-        f.write_all(b"\n").unwrap();
-      }
-      Event::Rule => {
-        f.write_all(b"\\rule").unwrap();
-      }
+      Event::HardBreak => f.write_all(b"\n").unwrap(),
+      Event::Rule => f.write_all(b"\\rule").unwrap(),
       Event::TaskListMarker(bool) => {
         f.write_all(format!("\\task-list-marker({bool});", bool = bool).as_bytes())
           .unwrap();
