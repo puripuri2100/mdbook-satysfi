@@ -111,17 +111,12 @@ document (|
   ctx
     .book
     .iter()
-    .for_each(|item| write_bookitme(&mut f, item, &root, 1));
+    .for_each(|item| write_bookitme(&mut f, item, &root));
   f.write(b">").unwrap();
 }
 
-fn write_bookitme(
-  f: &mut BufWriter<File>,
-  item: &BookItem,
-  root: &path::PathBuf,
-  indent: usize,
-) -> () {
-  let indent_str = "  ".repeat(indent);
+fn write_bookitme(f: &mut BufWriter<File>, item: &BookItem, root: &path::PathBuf) -> () {
+  let indent_str = "  ".repeat(1);
   match item {
     BookItem::Chapter(ch) => {
       let ch_name = ch.clone().name;
@@ -142,11 +137,6 @@ fn write_bookitme(
           md2satysfi::write_satysfi_code(f, ch.clone().content, &path).unwrap()
         }
       };
-      let sub_items = ch.clone().sub_items;
-      println!("{}'s sub_items : {:?}", ch_name, sub_items);
-      sub_items
-        .iter()
-        .for_each(|item| write_bookitme(f, item, root, indent + 1));
       f.write(format!("{}>\n", indent_str).as_bytes()).unwrap();
     }
     BookItem::Separator => {
