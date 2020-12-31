@@ -127,7 +127,7 @@ fn write_bookitme(
       let ch_name = ch.clone().name;
       f.write(
         format!(
-          "{indent}+Chapter{{{name}}} <",
+          "{indent}+Chapter{{{name}}} <\n",
           indent = indent_str,
           name = md2satysfi::escape_inline_text(&ch_name)
         )
@@ -139,12 +139,11 @@ fn write_bookitme(
         None => (),
         Some(path) => {
           let path = root.join(path);
-          let file_text = fs::read_to_string(&path).expect("ファイル読み込みに失敗した");
-          md2satysfi::write_satysfi_code(f, file_text, &path).expect("コード生成に失敗した")
+          md2satysfi::write_satysfi_code(f, ch.clone().content, &path).unwrap()
         }
       };
-      //f.write(satysfi_code.as_bytes()).unwrap();
       let sub_items = ch.clone().sub_items;
+      println!("{}'s sub_items : {:?}", ch_name, sub_items);
       sub_items
         .iter()
         .for_each(|item| write_bookitme(f, item, root, indent + 1));
