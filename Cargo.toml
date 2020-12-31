@@ -2,7 +2,7 @@
 authors = ["puripuri2100 <puripuri2100@gmail.com>"]
 edition = "2018"
 name = "mdbook-satysfi"
-version = "0.1.0"
+version = "0.0.0.1"
 
 [dependencies]
 mdbook = "0.4.4"
