@@ -5,6 +5,8 @@ use pulldown_cmark::Parser;
 use pulldown_cmark::Tag;
 use regex::Regex;
 use std::fs;
+use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::path;
 
 #[derive(Debug, Clone)]
@@ -16,44 +18,54 @@ enum TextMode {
   Code,
 }
 
-pub fn make_satysfi_code(md_text: String, file_path: &path::PathBuf) -> Result<String, ()> {
+pub fn write_satysfi_code(
+  f: &mut BufWriter<File>,
+  md_text: String,
+  file_path: &path::PathBuf,
+) -> Result<(), ()> {
   let mut options = Options::empty();
   options.insert(Options::ENABLE_TABLES);
   options.insert(Options::ENABLE_FOOTNOTES);
   options.insert(Options::ENABLE_TASKLISTS);
   options.insert(Options::ENABLE_SMART_PUNCTUATION);
   let parser = Parser::new_ext(&md_text, options);
-  parser_to_code(parser, file_path)
+  parser_to_code(f, parser, file_path)
 }
 
-fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, ()> {
+fn parser_to_code(
+  f: &mut BufWriter<File>,
+  parser: Parser,
+  file_path: &path::PathBuf,
+) -> Result<(), ()> {
   let mut code_str = String::new();
   let mut stack = vec![TextMode::Block];
-  let mut s = String::new();
   for event in parser {
     match event {
       Event::Start(tag) => match tag {
         Tag::Paragraph => {
-          s.push_str("+p {");
+          f.write(b"+p {").unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::Heading(level) => {
-          s.push_str(&format!("+heading ({level}) {{", level = level));
+          f.write(format!("+heading ({level}) {{", level = level).as_bytes())
+            .unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::BlockQuote => {
-          s.push_str("+block-quote <\n");
+          f.write(b"+block-quote <\n").unwrap();
           stack.push(TextMode::Block);
         }
         Tag::CodeBlock(_code_block_kind) => {
-          s.push_str("+code (");
+          f.write(b"+code (").unwrap();
           stack.push(TextMode::Code);
         }
         Tag::List(_dep_opt) => {
-          s.push_str("+listing {\n");
+          f.write(b"+listing {\n").unwrap();
           stack.push(TextMode::List);
         }
-        Tag::Item => s.push_str("* "),
+        Tag::Item => {
+          f.write(b"* ").unwrap();
+        }
         Tag::FootnoteDefinition(_text) => {}
         Tag::Table(alignment_list) => {
           let alignment_text: String = alignment_list
@@ -65,26 +77,35 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
               Alignment::Center => "c;",
             })
             .collect();
-          s.push_str(&format!(
-            "+p{{\\easytable [{alignment}] {{",
-            alignment = alignment_text
-          ));
+          f.write(
+            format!(
+              "+p{{\\easytable [{alignment}] {{",
+              alignment = alignment_text
+            )
+            .as_bytes(),
+          )
+          .unwrap();
           stack.push(TextMode::Table);
         }
         Tag::TableHead => {}
-        Tag::TableRow => s.push('\n'),
-        Tag::TableCell => s.push('|'),
+        Tag::TableRow => {
+          f.write(b"\n").unwrap();
+        }
+        Tag::TableCell => {
+          f.write(b"|").unwrap();
+        }
         Tag::Emphasis => {
-          s.push_str("\\emph {");
+          f.write(b"\\emph {").unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::Strong => {
-          s.push_str("\\strong {");
+          f.write(b"\\strong {").unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::Strikethrough => {}
         Tag::Link(_link_type, link, _title) => {
-          s.push_str(&format!("\\href (``` {url} ```) {{", url = link,));
+          f.write(format!("\\href (``` {url} ```) {{", url = link,).as_bytes())
+            .unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::Image(_link_type, _link, _title) => {
@@ -98,15 +119,15 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
       },
       Event::End(tag) => match tag {
         Tag::Paragraph => {
-          s.push_str("}\n");
+          f.write(b"}\n").unwrap();
           stack.pop();
         }
         Tag::Heading(_) => {
-          s.push_str("}\n");
+          f.write(b"}\n").unwrap();
           stack.pop();
         }
         Tag::BlockQuote => {
-          s.push_str(">\n");
+          f.write(b">\n").unwrap();
           stack.pop();
         }
         Tag::CodeBlock(_) => {
@@ -115,36 +136,37 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           );
           let n = count_accent_in_inline_text(&code);
           let raw = "`".repeat(n + 1);
-          s.push_str(&format!("{raw}\n{code}\n{raw});\n", raw = raw, code = code));
+          f.write(format!("{raw}\n{code}\n{raw});\n", raw = raw, code = code).as_bytes())
+            .unwrap();
           code_str = String::new();
           stack.pop();
         }
         Tag::List(_) => {
-          s.push_str("}\n");
+          f.write(b"}\n").unwrap();
           stack.pop();
         }
         Tag::Item => {
-          s.push('\n');
+          f.write(b"\n").unwrap();
         }
         Tag::FootnoteDefinition(_) => {}
         Tag::Table(_) => {
-          s.push_str("|}}\n");
+          f.write(b"|}}\n").unwrap();
           stack.pop();
         }
         Tag::TableHead => {}
         Tag::TableRow => {}
         Tag::TableCell => {}
         Tag::Emphasis => {
-          s.push('}');
+          f.write(b"}").unwrap();
           stack.pop();
         }
         Tag::Strong => {
-          s.push('}');
+          f.write(b"}").unwrap();
           stack.pop();
         }
         Tag::Strikethrough => {}
         Tag::Link(_, _, _) => {
-          s.push('}');
+          f.write(b"}").unwrap();
           stack.pop();
         }
         Tag::Image(_, _, _) => {
@@ -161,31 +183,34 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           }
           _ => escape_inline_text(&mdbook_specific_features_include_file(&text, file_path)),
         };
-        s.push_str(&t);
+        f.write(t.as_bytes()).unwrap();
         stack.push(now_mode_opt.unwrap_or(TextMode::Code))
       }
       Event::Code(code) => {
         let n = count_accent_in_inline_text(&code);
         let raw = "`".repeat(n + 1);
-        s.push_str(&format!(
-          "\\code({raw} {code} {raw});",
-          raw = raw,
-          code = code
-        ))
+        f.write(format!("\\code({raw} {code} {raw});", raw = raw, code = code).as_bytes())
+          .unwrap();
       }
       Event::Html(html) => {} //s.push_str("\\<html code\\>"),
       Event::FootnoteReference(footnote) => {
-        s.push_str(&format!("\\footnote{{{footnote}}}", footnote = footnote))
+        f.write(format!("\\footnote{{{footnote}}}", footnote = footnote).as_bytes())
+          .unwrap();
       }
-      Event::SoftBreak => s.push(' '),
-      Event::HardBreak => s.push('\n'),
-      Event::Rule => s.push_str("\\rule"),
+      Event::SoftBreak => {} //s.push(' '),
+      Event::HardBreak => {
+        f.write(b"\n").unwrap();
+      }
+      Event::Rule => {
+        f.write(b"\\rule").unwrap();
+      }
       Event::TaskListMarker(bool) => {
-        s.push_str(&format!("\\task-list-marker({bool});", bool = bool))
+        f.write(format!("\\task-list-marker({bool});", bool = bool).as_bytes())
+          .unwrap();
       }
     };
   }
-  Ok(s)
+  Ok(())
 }
 
 pub fn escape_inline_text(text: &str) -> String {

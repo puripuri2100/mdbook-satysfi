@@ -4,31 +4,26 @@ extern crate pulldown_cmark;
 use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
-use std::io::{self, Write};
+use std::io::{self, BufReader, BufWriter, Write};
 use std::path;
 //use std::process;
 
 mod md2satysfi;
 
 fn main() {
-  let mut stdin = io::stdin();
+  let stdin = io::stdin();
+  let mut stdin = BufReader::new(stdin);
   let ctx = RenderContext::from_json(&mut stdin).unwrap();
 
   let destination = &ctx.destination;
   let _ = fs::create_dir_all(&destination);
-  let mut f = File::create(&destination.join("main.saty")).unwrap();
+  let f = File::create(&destination.join("main.saty")).unwrap();
+  let mut f = BufWriter::new(f);
 
   let root = &ctx.source_dir();
 
-  let s: String = ctx
-    .book
-    .iter()
-    .map(|item| bookitme_to_string(item, &root, 1))
-    .collect();
-
-  writeln!(
-    f,
-    "@require: stdjabook
+  f.write(
+    b"@require: stdjabook
 @require: annot
 @require: itemize
 @require: code
@@ -105,59 +100,70 @@ let-inline ctx \\strong it =
 in
 
 document (|
-  title = {{}};
-  author = {{}};
+  title = {};
+  author = {};
   show-toc = false;
   show-title = false;
-|) '<
-{}
->
-",
-    s
+|) '<",
   )
   .unwrap();
+
+  ctx
+    .book
+    .iter()
+    .for_each(|item| write_bookitme(&mut f, item, &root, 1));
+  f.write(b">").unwrap();
 }
 
-fn bookitme_to_string(item: &BookItem, root: &path::PathBuf, indent: usize) -> String {
+fn write_bookitme(
+  f: &mut BufWriter<File>,
+  item: &BookItem,
+  root: &path::PathBuf,
+  indent: usize,
+) -> () {
   let indent_str = "  ".repeat(indent);
   match item {
     BookItem::Chapter(ch) => {
       let ch_name = ch.clone().name;
+      f.write(
+        format!(
+          "{indent}+Chapter{{{name}}} <",
+          indent = indent_str,
+          name = md2satysfi::escape_inline_text(&ch_name)
+        )
+        .as_bytes(),
+      )
+      .unwrap();
       let path_opt = ch.clone().path;
-      let satysfi_code = match path_opt {
-        None => String::new(),
+      match path_opt {
+        None => (),
         Some(path) => {
           let path = root.join(path);
-          fs::read_to_string(&path)
-            .map(|text| md2satysfi::make_satysfi_code(text, &path))
-            .unwrap_or_else(|_| Ok(String::from("ファイルが見つからなかった")))
-            .unwrap_or_else(|_| String::from("SATySFiのコード生成に失敗"))
+          let file_text = fs::read_to_string(&path).expect("ファイル読み込みに失敗した");
+          md2satysfi::write_satysfi_code(f, file_text, &path).expect("コード生成に失敗した")
         }
       };
+      //f.write(satysfi_code.as_bytes()).unwrap();
       let sub_items = ch.clone().sub_items;
-      let sub_item_str: String = sub_items
+      sub_items
         .iter()
-        .map(|item| bookitme_to_string(item, root, indent + 1))
-        .collect();
-      format!(
-        "
-{indent}+Chapter{{{name}}} <
-{code}
-{sub_item_str}
-{indent}>\n",
-        indent = indent_str,
-        name = md2satysfi::escape_inline_text(&ch_name),
-        code = satysfi_code,
-        sub_item_str = sub_item_str
-      )
+        .for_each(|item| write_bookitme(f, item, root, indent + 1));
+      f.write(format!("{}>\n", indent_str).as_bytes()).unwrap();
     }
-    BookItem::Separator => format!("{indent}+Separator;\n", indent = indent_str),
+    BookItem::Separator => {
+      f.write(format!("{indent}+Separator;\n", indent = indent_str).as_bytes())
+        .unwrap();
+    }
     BookItem::PartTitle(title) => {
-      format!(
-        "{indent}+PartTitle{{{title}}};\n",
-        indent = indent_str,
-        title = md2satysfi::escape_inline_text(title)
+      f.write(
+        format!(
+          "{indent}+PartTitle{{{title}}};\n",
+          indent = indent_str,
+          title = md2satysfi::escape_inline_text(title)
+        )
+        .as_bytes(),
       )
+      .unwrap();
     }
   }
 }
