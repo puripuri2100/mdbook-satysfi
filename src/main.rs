@@ -22,7 +22,7 @@ fn main() {
 
   let root = &ctx.source_dir();
 
-  f.write(
+  f.write_all(
     b"@require: stdjabook
 @require: annot
 @require: itemize
@@ -112,15 +112,15 @@ document (|
     .book
     .iter()
     .for_each(|item| write_bookitme(&mut f, item, &root));
-  f.write(b">").unwrap();
+  f.write_all(b">").unwrap();
 }
 
-fn write_bookitme(f: &mut BufWriter<File>, item: &BookItem, root: &path::PathBuf) -> () {
-  let indent_str = "  ".repeat(1);
+fn write_bookitme(f: &mut BufWriter<File>, item: &BookItem, root: &path::PathBuf) {
+  let indent_str = "  ".to_string();
   match item {
     BookItem::Chapter(ch) => {
       let ch_name = ch.clone().name;
-      f.write(
+      f.write_all(
         format!(
           "{indent}+Chapter{{{name}}} <\n",
           indent = indent_str,
@@ -137,14 +137,15 @@ fn write_bookitme(f: &mut BufWriter<File>, item: &BookItem, root: &path::PathBuf
           md2satysfi::write_satysfi_code(f, ch.clone().content, &path).unwrap()
         }
       };
-      f.write(format!("{}>\n", indent_str).as_bytes()).unwrap();
+      f.write_all(format!("{}>\n", indent_str).as_bytes())
+        .unwrap();
     }
     BookItem::Separator => {
-      f.write(format!("{indent}+Separator;\n", indent = indent_str).as_bytes())
+      f.write_all(format!("{indent}+Separator;\n", indent = indent_str).as_bytes())
         .unwrap();
     }
     BookItem::PartTitle(title) => {
-      f.write(
+      f.write_all(
         format!(
           "{indent}+PartTitle{{{title}}};\n",
           indent = indent_str,

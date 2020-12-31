@@ -43,28 +43,28 @@ fn parser_to_code(
     match event {
       Event::Start(tag) => match tag {
         Tag::Paragraph => {
-          f.write(b"+p {").unwrap();
+          f.write_all(b"+p {").unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::Heading(level) => {
-          f.write(format!("+heading ({level}) {{", level = level).as_bytes())
+          f.write_all(format!("+heading ({level}) {{", level = level).as_bytes())
             .unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::BlockQuote => {
-          f.write(b"+block-quote <\n").unwrap();
+          f.write_all(b"+block-quote <\n").unwrap();
           stack.push(TextMode::Block);
         }
         Tag::CodeBlock(_code_block_kind) => {
-          f.write(b"+code (").unwrap();
+          f.write_all(b"+code (").unwrap();
           stack.push(TextMode::Code);
         }
         Tag::List(_dep_opt) => {
-          f.write(b"+listing {\n").unwrap();
+          f.write_all(b"+listing {\n").unwrap();
           stack.push(TextMode::List);
         }
         Tag::Item => {
-          f.write(b"* ").unwrap();
+          f.write_all(b"* ").unwrap();
         }
         Tag::FootnoteDefinition(_text) => {}
         Tag::Table(alignment_list) => {
@@ -77,7 +77,7 @@ fn parser_to_code(
               Alignment::Center => "c;",
             })
             .collect();
-          f.write(
+          f.write_all(
             format!(
               "+p{{\\easytable [{alignment}] {{",
               alignment = alignment_text
@@ -89,22 +89,22 @@ fn parser_to_code(
         }
         Tag::TableHead => {}
         Tag::TableRow => {
-          f.write(b"\n").unwrap();
+          f.write_all(b"\n").unwrap();
         }
         Tag::TableCell => {
-          f.write(b"|").unwrap();
+          f.write_all(b"|").unwrap();
         }
         Tag::Emphasis => {
-          f.write(b"\\emph {").unwrap();
+          f.write_all(b"\\emph {").unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::Strong => {
-          f.write(b"\\strong {").unwrap();
+          f.write_all(b"\\strong {").unwrap();
           stack.push(TextMode::Inline);
         }
         Tag::Strikethrough => {}
         Tag::Link(_link_type, link, _title) => {
-          f.write(format!("\\href (``` {url} ```) {{", url = link,).as_bytes())
+          f.write_all(format!("\\href (``` {url} ```) {{", url = link,).as_bytes())
             .unwrap();
           stack.push(TextMode::Inline);
         }
@@ -119,15 +119,15 @@ fn parser_to_code(
       },
       Event::End(tag) => match tag {
         Tag::Paragraph => {
-          f.write(b"}\n").unwrap();
+          f.write_all(b"}\n").unwrap();
           stack.pop();
         }
         Tag::Heading(_) => {
-          f.write(b"}\n").unwrap();
+          f.write_all(b"}\n").unwrap();
           stack.pop();
         }
         Tag::BlockQuote => {
-          f.write(b">\n").unwrap();
+          f.write_all(b">\n").unwrap();
           stack.pop();
         }
         Tag::CodeBlock(_) => {
@@ -136,37 +136,37 @@ fn parser_to_code(
           );
           let n = count_accent_in_inline_text(&code);
           let raw = "`".repeat(n + 1);
-          f.write(format!("{raw}\n{code}\n{raw});\n", raw = raw, code = code).as_bytes())
+          f.write_all(format!("{raw}\n{code}\n{raw});\n", raw = raw, code = code).as_bytes())
             .unwrap();
           code_str = String::new();
           stack.pop();
         }
         Tag::List(_) => {
-          f.write(b"}\n").unwrap();
+          f.write_all(b"}\n").unwrap();
           stack.pop();
         }
         Tag::Item => {
-          f.write(b"\n").unwrap();
+          f.write_all(b"\n").unwrap();
         }
         Tag::FootnoteDefinition(_) => {}
         Tag::Table(_) => {
-          f.write(b"|}}\n").unwrap();
+          f.write_all(b"|}}\n").unwrap();
           stack.pop();
         }
         Tag::TableHead => {}
         Tag::TableRow => {}
         Tag::TableCell => {}
         Tag::Emphasis => {
-          f.write(b"}").unwrap();
+          f.write_all(b"}").unwrap();
           stack.pop();
         }
         Tag::Strong => {
-          f.write(b"}").unwrap();
+          f.write_all(b"}").unwrap();
           stack.pop();
         }
         Tag::Strikethrough => {}
         Tag::Link(_, _, _) => {
-          f.write(b"}").unwrap();
+          f.write_all(b"}").unwrap();
           stack.pop();
         }
         Tag::Image(_, _, _) => {
@@ -183,29 +183,29 @@ fn parser_to_code(
           }
           _ => escape_inline_text(&mdbook_specific_features_include_file(&text, file_path)),
         };
-        f.write(t.as_bytes()).unwrap();
+        f.write_all(t.as_bytes()).unwrap();
         stack.push(now_mode_opt.unwrap_or(TextMode::Code))
       }
       Event::Code(code) => {
         let n = count_accent_in_inline_text(&code);
         let raw = "`".repeat(n + 1);
-        f.write(format!("\\code({raw} {code} {raw});", raw = raw, code = code).as_bytes())
+        f.write_all(format!("\\code({raw} {code} {raw});", raw = raw, code = code).as_bytes())
           .unwrap();
       }
       Event::Html(html) => {} //s.push_str("\\<html code\\>"),
       Event::FootnoteReference(footnote) => {
-        f.write(format!("\\footnote{{{footnote}}}", footnote = footnote).as_bytes())
+        f.write_all(format!("\\footnote{{{footnote}}}", footnote = footnote).as_bytes())
           .unwrap();
       }
       Event::SoftBreak => {} //s.push(' '),
       Event::HardBreak => {
-        f.write(b"\n").unwrap();
+        f.write_all(b"\n").unwrap();
       }
       Event::Rule => {
-        f.write(b"\\rule").unwrap();
+        f.write_all(b"\\rule").unwrap();
       }
       Event::TaskListMarker(bool) => {
-        f.write(format!("\\task-list-marker({bool});", bool = bool).as_bytes())
+        f.write_all(format!("\\task-list-marker({bool});", bool = bool).as_bytes())
           .unwrap();
       }
     };
@@ -231,22 +231,30 @@ pub fn escape_inline_text(text: &str) -> String {
 
 pub fn count_accent_in_inline_text(text: &str) -> usize {
   let chars: Vec<char> = text.chars().collect();
+  let mut count = 0;
   let mut n = 0;
-  let mut m = 0;
   for c in chars.iter() {
     if c == &'`' {
-      m += 1
-    } else if m > n {
-      n = m;
-      m = 0;
-    };
+      n += 1
+    } else if n > count {
+      count = n;
+      n = 0;
+    }
   }
-  n
+  if n > count {
+    count = n;
+  }
+  count
 }
 
 #[test]
 fn check_count_accent_in_inline_text() {
   assert_eq!(3, count_accent_in_inline_text("aa``bb```c``d`"))
+}
+
+#[test]
+fn check_count_accent_in_inline_text2() {
+  assert_eq!(1, count_accent_in_inline_text("`"))
 }
 
 // parse mdBook-specific features
