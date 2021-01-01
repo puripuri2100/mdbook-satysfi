@@ -134,7 +134,8 @@ fn write_bookitme(f: &mut BufWriter<File>, item: &BookItem, root: &path::PathBuf
         None => (),
         Some(path) => {
           let path = root.join(path);
-          md2satysfi::write_satysfi_code(f, ch.clone().content, &path).unwrap()
+          let s = md2satysfi::md_to_satysfi_code(ch.clone().content, &path).unwrap();
+          f.write_all(s.as_bytes()).unwrap()
         }
       };
       f.write_all(format!("{}>\n", indent_str).as_bytes())
