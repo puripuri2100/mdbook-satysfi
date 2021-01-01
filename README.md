@@ -1,9 +1,12 @@
 # mdbook-satysfi
 
 [![source badge][source-badge]][source]
+[![license badge][license-badge]][license]
 
 [source]: https://github.com/puripuri2100/mdbook-satysfi
 [source-badge]: https://img.shields.io/badge/source-github-blue
+[license]: https://github.com/puripuri2100/mdbook-satysfi/blob/master/LICENSE
+[license-badge]: https://img.shields.io/badge/license-MIT-blue
 
 ## Installation
 
@@ -46,3 +49,7 @@ Then delete the `[output.satysfi]` configuration in `book.toml`:
 
 - [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark): Parses the markdown source AST.
 
+
+---
+
+(c) 2021 Naoki Kaneko (a.k.a. "puripuri2100")
