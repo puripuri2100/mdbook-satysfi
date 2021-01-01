@@ -52,10 +52,10 @@ impl Mode {
   fn pop(&mut self) -> Self {
     let default = self.clone().default;
     let mut stack = self.clone().stack;
-    let now = stack.pop().unwrap_or(default.clone());
+    let now = stack.pop().unwrap_or_else(|| default.clone());
     Mode {
       default,
-      now: now.clone(),
+      now,
       stack,
     }
   }

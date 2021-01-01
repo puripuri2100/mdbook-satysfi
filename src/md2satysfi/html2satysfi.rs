@@ -53,7 +53,7 @@ fn check_html_to_satysfi_code_1() {
 
 fn tag_p_to_code(
   _attributes: &HashMap<String, Option<String>>,
-  children: &Vec<Node>,
+  children: &[Node],
   mode: &Mode,
 ) -> String {
   match mode {
@@ -89,7 +89,7 @@ fn tag_p_to_code(
 
 fn tag_code_to_code(
   _attributes: &HashMap<String, Option<String>>,
-  children: &Vec<Node>,
+  children: &[Node],
   mode: &Mode,
 ) -> String {
   match mode {
@@ -131,7 +131,7 @@ fn tag_code_to_code(
 
 fn tag_img_to_code(
   attributes: &HashMap<String, Option<String>>,
-  _children: &Vec<Node>,
+  _children: &[Node],
   mode: &Mode,
 ) -> String {
   let src = attributes.get("src").unwrap().clone().unwrap();
@@ -166,7 +166,7 @@ fn escape_inline_text(text: &str) -> String {
 
 fn make_code(is_block: bool, code: &str) -> String {
   let i = count_accent_in_inline_text(code);
-  let raw = "`".repeat(i+1);
+  let raw = "`".repeat(i + 1);
   if is_block {
     format!("{raw}\n{code}\n{raw}", code = code, raw = raw)
   } else {
