@@ -22,7 +22,7 @@ fn node_to_satysfi_code(node: &Node, mode: Mode) -> String {
     Node::Text(str) => match mode {
       Mode::Inline => escape_inline_text(str),
       Mode::Block => format!("+p{{{}}}", escape_inline_text(str)),
-      Mode::Code => make_code(false, str),
+      Mode::Code => str.to_string(),
     },
     Node::Element(element) => {
       let tag_name = &element.name.to_lowercase();
@@ -44,9 +44,9 @@ fn node_to_satysfi_code(node: &Node, mode: Mode) -> String {
 #[test]
 fn name() {
   assert_eq!(
-    "".to_owned(),
+    r#"+p{this is a image.\img(` img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#.to_owned(),
     html_to_satysfi_code(
-      r#"<img alt="Rendered documentation for the `art` crate that lists the `kinds` and `utils` modules" src="img/trpl14-03.png" class="center" />"#
+      r#"<p> this is a image. <img src="img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#
     )
   )
 }
@@ -137,10 +137,10 @@ fn tag_img_to_code(
   let src = attributes.get("src").unwrap().clone().unwrap();
   match mode {
     Mode::Block => {
-      format!("+img({});", make_code(true, &src))
+      format!("+img({});", make_code(false, &src))
     }
     Mode::Inline => {
-      format!("\\img({});", make_code(true, &src))
+      format!("\\img({});", make_code(false, &src))
     }
     Mode::Code => {
       format!("<img src=\"{}\"/>", src)
@@ -166,7 +166,7 @@ fn escape_inline_text(text: &str) -> String {
 
 fn make_code(is_block: bool, code: &str) -> String {
   let i = count_accent_in_inline_text(code);
-  let raw = "`".repeat(i);
+  let raw = "`".repeat(i+1);
   if is_block {
     format!("{raw}\n{code}\n{raw}", code = code, raw = raw)
   } else {
