@@ -42,7 +42,7 @@ fn node_to_satysfi_code(node: &Node, mode: Mode) -> String {
 }
 
 #[test]
-fn name() {
+fn check_html_to_satysfi_code_1() {
   assert_eq!(
     r#"+p{this is a image.\img(` img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#.to_owned(),
     html_to_satysfi_code(
