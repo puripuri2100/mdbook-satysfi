@@ -48,7 +48,7 @@ Then delete the `[output.satysfi]` configuration in `book.toml`:
 `mdbook-satysfi` is built upon some really wonderful projects, including:
 
 - [pulldown-cmark](https://github.com/raphlinus/pulldown-cmark): Parses the markdown source AST.
-- [scraper](https://github.com/causal-agent/scraper): Parsing the html tag.
+- [html_parser](https://github.com/mathiversen/html-parser): Parsing the html tag.
 
 ---
 
