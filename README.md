@@ -1,8 +1,11 @@
 # mdbook-satysfi
 
+[![Build Status][ci-badge]][ci]
 [![source badge][source-badge]][source]
 [![license badge][license-badge]][license]
 
+[ci]: https://github.com/puripuri2100/mdbook-satysfi/actions?query=workflow%3ARust%20CI
+[ci-badge]: https://github.com/puripuri2100/mdbook-satysfi/workflows/Rust%20CI/badge.svg?branch=master
 [source]: https://github.com/puripuri2100/mdbook-satysfi
 [source-badge]: https://img.shields.io/badge/source-github-blue
 [license]: https://github.com/puripuri2100/mdbook-satysfi/blob/master/LICENSE
