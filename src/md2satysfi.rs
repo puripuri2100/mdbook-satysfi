@@ -3,6 +3,7 @@ use pulldown_cmark::Event;
 use pulldown_cmark::Options;
 use pulldown_cmark::Parser;
 use pulldown_cmark::Tag;
+use regex::Regex;
 use std::path;
 
 mod html2satysfi;
@@ -15,7 +16,7 @@ enum TextMode {
   List,
   Table,
   Code,
-  Html(String),
+  Html,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -96,6 +97,7 @@ pub fn md_to_satysfi_code(md_text: String, file_path: &path::PathBuf) -> Result<
 fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, ()> {
   let mut s = String::new();
   let mut code_str = String::new();
+  let mut html_str = String::new();
   let mut mode = Mode::new(TextMode::Block);
   for event in parser {
     match event {
@@ -219,16 +221,20 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
       },
       Event::Text(text) => {
         let now_mode = mode.now();
-        let t = match now_mode {
+        match now_mode {
           TextMode::Code => {
             code_str.push_str(&text);
-            String::new()
           }
-          _ => escape_inline_text(&mdbook_specific_features::parse_include_file(
-            &text, file_path,
-          )),
-        };
-        s.push_str(&t);
+          TextMode::Html => {
+            html_str.push_str(&text);
+          }
+          _ => {
+            let t = escape_inline_text(&mdbook_specific_features::parse_include_file(
+              &text, file_path,
+            ));
+            s.push_str(&t)
+          }
+        }
       }
       Event::Code(code) => {
         let n = count_accent_in_inline_text(&code);
@@ -239,7 +245,39 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           code = code
         ));
       }
-      Event::Html(html_code) => {} //s.push_str("\\<html code\\>"),
+      Event::Html(html_code) => {
+        let start_tag_re = Regex::new("<[^!/][^<]+[^/]>").unwrap();
+        let end_tag_re = Regex::new("</[^>]+[^/]>").unwrap();
+        let start_end_re = Regex::new("<.+/>").unwrap();
+        // let comment_re = Regex::new("<!--.+-->").unwrap();
+        if start_tag_re.is_match(&html_code) {
+          mode = mode.push(TextMode::Html);
+          html_str.push_str(&html_code)
+        } else if end_tag_re.is_match(&html_code) {
+          mode = mode.pop();
+          html_str.push_str(&html_code);
+          match mode.now() {
+            TextMode::Html => {}
+            _ => {
+              // end html code
+              let satysfi_code = html2satysfi::html_to_satysfi_code(&html_str);
+              s.push_str(&satysfi_code);
+              html_str = String::new();
+            }
+          }
+        } else if start_end_re.is_match(&html_code) {
+          html_str.push_str(&html_code);
+          match mode.now() {
+            TextMode::Html => {}
+            _ => {
+              // end html code
+              let satysfi_code = html2satysfi::html_to_satysfi_code(&html_str);
+              s.push_str(&satysfi_code);
+              html_str = String::new();
+            }
+          }
+        }
+      }
       Event::FootnoteReference(footnote) => {
         s.push_str(&format!("\\footnote{{{footnote}}}", footnote = footnote));
       }

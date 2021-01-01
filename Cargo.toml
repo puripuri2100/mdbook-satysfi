@@ -1,5 +1,5 @@
 [package]
-authors = ["puripuri2100 <puripuri2100@gmail.com>"]
+authors = ["Naoki Kaneko <puripuri2100@gmail.com>"]
 edition = "2018"
 name = "mdbook-satysfi"
 version = "0.0.1-beta"
@@ -9,4 +9,4 @@ license = "MIT"
 mdbook = "0.4.4"
 pulldown-cmark = "0.8.0"
 regex = "1.4.2"
-scraper = "0.12.0"
+html_parser = "0.6.2"
