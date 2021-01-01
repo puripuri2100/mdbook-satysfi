@@ -1,0 +1,25 @@
+name: Rust CI
+
+on: [push,pull_request]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: |
+        rustup component add rustfmt
+        rustup component add clippy
+        cargo build --verbose
+    - name: Fmt check
+      run: cargo fmt --all -- --check
+    - name: Lint check
+      run: cargo clippy -- -D warnings
+    - name: Run tests
+      run: cargo test --verbose
