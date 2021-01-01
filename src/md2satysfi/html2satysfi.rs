@@ -32,6 +32,7 @@ fn node_to_satysfi_code(node: &Node, mode: Mode) -> String {
         "p" => tag_p_to_code(&attributes, &children, &mode),
         "code" => tag_code_to_code(&attributes, &children, &mode),
         "img" => tag_img_to_code(&attributes, &children, &mode),
+        "span" => tag_span_to_code(&attributes, &children, &mode),
         _ => {
           eprintln!(r#""{}" tag is not supported"#, tag_name);
           String::new()
@@ -144,6 +145,43 @@ fn tag_img_to_code(
     }
     Mode::Code => {
       format!("<img src=\"{}\"/>", src)
+    }
+  }
+}
+
+fn tag_span_to_code(
+  _attributes: &HashMap<String, Option<String>>,
+  children: &[Node],
+  mode: &Mode,
+) -> String {
+  match mode {
+    Mode::Block => {
+      format!(
+        "+span{{{}}}",
+          children
+            .iter()
+            .map(|node| node_to_satysfi_code(node, Mode::Inline))
+            .collect::<String>()
+      )
+    }
+    Mode::Inline => {
+      format!(
+        "\\span{{{}}}",
+          children
+            .iter()
+            .map(|node| node_to_satysfi_code(node, Mode::Inline))
+            .collect::<String>()
+        
+      )
+    }
+    Mode::Code => {
+      format!(
+        "<span>{}</span>",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Code))
+          .collect::<String>()
+      )
     }
   }
 }
