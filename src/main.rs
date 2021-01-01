@@ -1,6 +1,7 @@
 extern crate mdbook;
 extern crate pulldown_cmark;
 
+use mdbook::config::Config;
 use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
@@ -22,8 +23,11 @@ fn main() {
 
   let root = &ctx.source_dir();
 
-  let title = &ctx.config.book.title.unwrap_or_default();
-  let authors = &ctx.config.book.authors;
+  let cfg = &ctx.config;
+  let book = &cfg.book;
+
+  let title = &book.clone().title.unwrap_or_default();
+  let authors = &book.authors;
   let len = authors.len();
   let author = authors
     .iter()
