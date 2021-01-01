@@ -22,8 +22,26 @@ fn main() {
 
   let root = &ctx.source_dir();
 
+  let title = &ctx.config.book.title.unwrap_or_default();
+  let authors = &ctx.config.book.authors;
+  let len = authors.len();
+  let author = authors
+    .iter()
+    .enumerate()
+    .map(|(i, s)| {
+      if i == 0 {
+        s.to_string()
+      } else if i == len - 1 {
+        format!("and {}", s)
+      } else {
+        format!(", {}", s)
+      }
+    })
+    .collect::<String>();
+
   f.write_all(
-    b"@require: stdjabook
+    format!(
+      "@require: stdjabook
 @require: annot
 @require: itemize
 @require: code
@@ -100,11 +118,15 @@ let-inline ctx \\strong it =
 in
 
 document (|
-  title = {};
-  author = {};
+  title = {{{title}}};
+  author = {{{author}}};
   show-toc = false;
   show-title = false;
 |) '<",
+      title = title,
+      author = author
+    )
+    .as_bytes(),
   )
   .unwrap();
 
