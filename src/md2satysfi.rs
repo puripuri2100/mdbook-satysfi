@@ -5,15 +5,82 @@ use pulldown_cmark::Parser;
 use pulldown_cmark::Tag;
 use std::path;
 
+mod html2satysfi;
 mod mdbook_specific_features;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum TextMode {
   Block,
   Inline,
   List,
   Table,
   Code,
+  Html(String),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct Mode {
+  pub default: TextMode,
+  pub now: TextMode,
+  pub stack: Vec<TextMode>,
+}
+
+impl Mode {
+  fn new(default_mode: TextMode) -> Self {
+    Mode {
+      default: default_mode.clone(),
+      now: default_mode,
+      stack: Vec::new(),
+    }
+  }
+
+  fn now(&self) -> TextMode {
+    self.clone().now
+  }
+
+  fn push(&mut self, mode: TextMode) -> Self {
+    let mut stack = self.clone().stack;
+    stack.push(self.clone().now);
+    Mode {
+      now: mode,
+      stack,
+      ..self.clone()
+    }
+  }
+
+  fn pop(&mut self) -> Self {
+    let default = self.clone().default;
+    let mut stack = self.clone().stack;
+    let now = stack.pop().unwrap_or(default.clone());
+    Mode {
+      default,
+      now: now.clone(),
+      stack,
+    }
+  }
+}
+
+#[test]
+fn check_mode() {
+  let mut stack = Mode::new(TextMode::Block);
+  stack = stack.push(TextMode::Inline);
+  stack = stack.push(TextMode::Block);
+  stack = stack.push(TextMode::Inline);
+  stack = stack.push(TextMode::Block);
+  stack = stack.push(TextMode::Inline);
+  assert_eq!(
+    vec![
+      TextMode::Block,
+      TextMode::Inline,
+      TextMode::Block,
+      TextMode::Inline,
+      TextMode::Block
+    ],
+    stack.stack
+  );
+  assert_eq!(TextMode::Inline, stack.now());
+  stack = stack.pop();
+  assert_eq!(TextMode::Block, stack.now());
 }
 
 pub fn md_to_satysfi_code(md_text: String, file_path: &path::PathBuf) -> Result<String, ()> {
@@ -29,29 +96,29 @@ pub fn md_to_satysfi_code(md_text: String, file_path: &path::PathBuf) -> Result<
 fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, ()> {
   let mut s = String::new();
   let mut code_str = String::new();
-  let mut stack = vec![TextMode::Block];
+  let mut mode = Mode::new(TextMode::Block);
   for event in parser {
     match event {
       Event::Start(tag) => match tag {
         Tag::Paragraph => {
           s.push_str("+p {");
-          stack.push(TextMode::Inline);
+          mode = mode.push(TextMode::Inline)
         }
         Tag::Heading(level) => {
           s.push_str(&format!("+heading ({level}) {{", level = level));
-          stack.push(TextMode::Inline);
+          mode = mode.push(TextMode::Inline);
         }
         Tag::BlockQuote => {
           s.push_str("+block-quote <\n");
-          stack.push(TextMode::Block);
+          mode = mode.push(TextMode::Block);
         }
         Tag::CodeBlock(_code_block_kind) => {
           s.push_str("+code (");
-          stack.push(TextMode::Code);
+          mode = mode.push(TextMode::Code);
         }
         Tag::List(_dep_opt) => {
           s.push_str("+listing {\n");
-          stack.push(TextMode::List);
+          mode = mode.push(TextMode::List);
         }
         Tag::Item => s.push_str("* "),
         Tag::FootnoteDefinition(_text) => {}
@@ -69,23 +136,23 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
             "+p{{\\easytable [{alignment}] {{",
             alignment = alignment_text
           ));
-          stack.push(TextMode::Table);
+          mode = mode.push(TextMode::Table);
         }
         Tag::TableHead => {}
         Tag::TableRow => s.push('\n'),
         Tag::TableCell => s.push('|'),
         Tag::Emphasis => {
           s.push_str("\\emph {");
-          stack.push(TextMode::Inline);
+          mode = mode.push(TextMode::Inline);
         }
         Tag::Strong => {
           s.push_str("\\strong {");
-          stack.push(TextMode::Inline);
+          mode = mode.push(TextMode::Inline);
         }
         Tag::Strikethrough => {}
         Tag::Link(_link_type, link, _title) => {
           s.push_str(&format!("\\href (``` {url} ```) {{", url = link,));
-          stack.push(TextMode::Inline);
+          mode = mode.push(TextMode::Inline);
         }
         Tag::Image(_link_type, _link, _title) => {
           //s.push_str(&format!(
@@ -93,21 +160,21 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           //  link = link,
           //  title = title
           //));
-          stack.push(TextMode::Inline);
+          mode = mode.push(TextMode::Inline);
         }
       },
       Event::End(tag) => match tag {
         Tag::Paragraph => {
           s.push_str("}\n");
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::Heading(_) => {
           s.push_str("}\n");
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::BlockQuote => {
           s.push_str(">\n");
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::CodeBlock(_) => {
           let code = mdbook_specific_features::hiding_code_lines(
@@ -117,43 +184,43 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           let raw = "`".repeat(n + 1);
           s.push_str(&format!("{raw}\n{code}\n{raw});\n", raw = raw, code = code));
           code_str = String::new();
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::List(_) => {
           s.push_str("}\n");
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::Item => s.push('\n'),
         Tag::FootnoteDefinition(_) => {}
         Tag::Table(_) => {
           s.push_str("|}}\n");
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::TableHead => {}
         Tag::TableRow => {}
         Tag::TableCell => {}
         Tag::Emphasis => {
           s.push('}');
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::Strong => {
           s.push('}');
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::Strikethrough => {}
         Tag::Link(_, _, _) => {
           s.push('}');
-          stack.pop();
+          mode = mode.pop();
         }
         Tag::Image(_, _, _) => {
           //s.push_str("}");
-          stack.pop();
+          mode = mode.pop();
         }
       },
       Event::Text(text) => {
-        let now_mode_opt = stack.pop();
-        let t = match now_mode_opt {
-          Some(TextMode::Code) => {
+        let now_mode = mode.now();
+        let t = match now_mode {
+          TextMode::Code => {
             code_str.push_str(&text);
             String::new()
           }
@@ -162,7 +229,6 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           )),
         };
         s.push_str(&t);
-        stack.push(now_mode_opt.unwrap_or(TextMode::Code))
       }
       Event::Code(code) => {
         let n = count_accent_in_inline_text(&code);
