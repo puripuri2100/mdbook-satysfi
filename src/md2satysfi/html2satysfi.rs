@@ -2,17 +2,17 @@ use html_parser::{Dom, Node};
 use std::collections::hash_map::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
-enum Mode {
+pub enum Mode {
   Block,
   Inline,
   Code,
 }
 
-pub fn html_to_satysfi_code(html_code: &str) -> String {
+pub fn html_to_satysfi_code(html_code: &str, mode: Mode) -> String {
   let node_lst = Dom::parse(html_code).unwrap().children;
   node_lst
     .iter()
-    .map(|node| node_to_satysfi_code(node, Mode::Block))
+    .map(|node| node_to_satysfi_code(node, mode))
     .collect()
 }
 
@@ -33,6 +33,9 @@ fn node_to_satysfi_code(node: &Node, mode: Mode) -> String {
         "code" => tag_code_to_code(&attributes, &children, &mode),
         "img" => tag_img_to_code(&attributes, &children, &mode),
         "span" => tag_span_to_code(&attributes, &children, &mode),
+        "ruby" => tag_ruby_to_code(&attributes, &children, &mode),
+        "rp" => tag_rp_to_code(&attributes, &children, &mode),
+        "rt" => tag_rt_to_code(&attributes, &children, &mode),
         _ => {
           eprintln!(r#""{}" tag is not supported"#, tag_name);
           String::new()
@@ -47,7 +50,30 @@ fn check_html_to_satysfi_code_1() {
   assert_eq!(
     r#"+p{this is a image.\img(` img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#.to_owned(),
     html_to_satysfi_code(
-      r#"<p> this is a image. <img src="img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#
+      r#"<p> this is a image. <img src="img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
+      Mode::Block
+    )
+  )
+}
+
+#[test]
+fn check_html_to_satysfi_code_2() {
+  assert_eq!(
+    r#"\p{this is a image.\img(` img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#.to_owned(),
+    html_to_satysfi_code(
+      r#"<p> this is a image. <img src="img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
+      Mode::Inline
+    )
+  )
+}
+
+#[test]
+fn check_html_to_satysfi_code_3() {
+  assert_eq!(
+    r#"\ruby{如何\rp{(}\rt{いか}\rp{)}}"#.to_string(),
+    html_to_satysfi_code(
+      r#"<ruby>如何<rp>(</rp><rt>いか</rt><rp>)</rp></ruby>"#,
+      Mode::Inline
     )
   )
 }
@@ -158,25 +184,132 @@ fn tag_span_to_code(
     Mode::Block => {
       format!(
         "+span{{{}}}",
-          children
-            .iter()
-            .map(|node| node_to_satysfi_code(node, Mode::Inline))
-            .collect::<String>()
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Inline))
+          .collect::<String>()
       )
     }
     Mode::Inline => {
       format!(
         "\\span{{{}}}",
-          children
-            .iter()
-            .map(|node| node_to_satysfi_code(node, Mode::Inline))
-            .collect::<String>()
-        
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Inline))
+          .collect::<String>()
       )
     }
     Mode::Code => {
       format!(
         "<span>{}</span>",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Code))
+          .collect::<String>()
+      )
+    }
+  }
+}
+
+fn tag_ruby_to_code(
+  _attributes: &HashMap<String, Option<String>>,
+  children: &[Node],
+  mode: &Mode,
+) -> String {
+  match mode {
+    Mode::Block => {
+      format!(
+        "+ruby{{{}}}",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Inline))
+          .collect::<String>()
+      )
+    }
+    Mode::Inline => {
+      format!(
+        "\\ruby{{{}}}",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Inline))
+          .collect::<String>()
+      )
+    }
+    Mode::Code => {
+      format!(
+        "<ruby>{}</ruby>",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Code))
+          .collect::<String>()
+      )
+    }
+  }
+}
+
+fn tag_rp_to_code(
+  _attributes: &HashMap<String, Option<String>>,
+  children: &[Node],
+  mode: &Mode,
+) -> String {
+  match mode {
+    Mode::Block => {
+      format!(
+        "+rp{{{}}}",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Inline))
+          .collect::<String>()
+      )
+    }
+    Mode::Inline => {
+      format!(
+        "\\rp{{{}}}",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Inline))
+          .collect::<String>()
+      )
+    }
+    Mode::Code => {
+      format!(
+        "<rp>{}</rp>",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Code))
+          .collect::<String>()
+      )
+    }
+  }
+}
+
+fn tag_rt_to_code(
+  _attributes: &HashMap<String, Option<String>>,
+  children: &[Node],
+  mode: &Mode,
+) -> String {
+  match mode {
+    Mode::Block => {
+      format!(
+        "+rt{{{}}}",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Inline))
+          .collect::<String>()
+      )
+    }
+    Mode::Inline => {
+      format!(
+        "\\rt{{{}}}",
+        children
+          .iter()
+          .map(|node| node_to_satysfi_code(node, Mode::Inline))
+          .collect::<String>()
+      )
+    }
+    Mode::Code => {
+      format!(
+        "<rt>{}</rt>",
         children
           .iter()
           .map(|node| node_to_satysfi_code(node, Mode::Code))

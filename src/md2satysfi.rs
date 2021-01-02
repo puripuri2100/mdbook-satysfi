@@ -17,6 +17,7 @@ enum TextMode {
   Table,
   Code,
   Html,
+  HtmlComment,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -102,10 +103,13 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
   for event in parser {
     match event {
       Event::Start(tag) => match tag {
-        Tag::Paragraph => {
-          s.push_str("+p {");
-          mode = mode.push(TextMode::Inline)
-        }
+        Tag::Paragraph => match mode.now() {
+          TextMode::Html | TextMode::HtmlComment => {}
+          _ => {
+            s.push_str("+p {");
+            mode = mode.push(TextMode::Inline)
+          }
+        },
         Tag::Heading(level) => {
           s.push_str(&format!("+heading ({level}) {{", level = level));
           mode = mode.push(TextMode::Inline);
@@ -166,10 +170,13 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
         }
       },
       Event::End(tag) => match tag {
-        Tag::Paragraph => {
-          s.push_str("}\n");
-          mode = mode.pop();
-        }
+        Tag::Paragraph => match mode.now() {
+          TextMode::Html | TextMode::HtmlComment => {}
+          _ => {
+            s.push_str("}\n");
+            mode = mode.pop();
+          }
+        },
         Tag::Heading(_) => {
           s.push_str("}\n");
           mode = mode.pop();
@@ -228,6 +235,9 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           TextMode::Html => {
             html_str.push_str(&text);
           }
+          TextMode::HtmlComment => {
+            html_str.push_str(&text);
+          }
           _ => {
             let t = escape_inline_text(&mdbook_specific_features::parse_include_file(
               &text, file_path,
@@ -236,45 +246,136 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           }
         }
       }
-      Event::Code(code) => {
-        let n = count_accent_in_inline_text(&code);
-        let raw = "`".repeat(n + 1);
-        s.push_str(&format!(
-          "\\code({raw} {code} {raw});",
-          raw = raw,
-          code = code
-        ));
-      }
+      Event::Code(code) => match mode.now() {
+        TextMode::Html | TextMode::HtmlComment => html_str.push_str(&code),
+        _ => {
+          let n = count_accent_in_inline_text(&code);
+          let raw = "`".repeat(n + 1);
+          s.push_str(&format!(
+            "\\code({raw} {code} {raw});",
+            raw = raw,
+            code = code
+          ));
+        }
+      },
       Event::Html(html_code) => {
-        let start_tag_re = Regex::new("<[^!/][^<]+[^/]>").unwrap();
-        let end_tag_re = Regex::new("</[^>]+[^/]>").unwrap();
-        let start_end_re = Regex::new("<.+/>").unwrap();
-        // let comment_re = Regex::new("<!--.+-->").unwrap();
-        if start_tag_re.is_match(&html_code) {
-          mode = mode.push(TextMode::Html);
-          html_str.push_str(&html_code)
-        } else if end_tag_re.is_match(&html_code) {
-          mode = mode.pop();
-          html_str.push_str(&html_code);
+        let start_tag_re =
+          Regex::new("^((<[^!/]>|<[^!/][^<]*[^/]>).*|<[^!/]|<[^!/][^<>/]*)").unwrap();
+        let end_tag_re = Regex::new(".*</[^>]*[^/]>").unwrap();
+        let start_end_re =
+          Regex::new("((<[^!/]>|<[^!/][^<]*[^/]>).*</[^>]*[^/]>)|<[^!/].*/>").unwrap();
+        let one_line_comment_re = Regex::new("<!--[\\s\\S]*?-->").unwrap();
+        let comment_start_re = Regex::new("<!--.*").unwrap();
+        let comment_end_re = Regex::new(".*-->").unwrap();
+        if start_end_re.is_match(&html_code) {
           match mode.now() {
-            TextMode::Html => {}
+            TextMode::Html | TextMode::HtmlComment => html_str.push_str(&html_code),
+            TextMode::Block => {
+              // end html code
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Block);
+              s.push_str(&satysfi_code);
+            }
+            TextMode::Code => {
+              // end html code
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Code);
+              s.push_str(&satysfi_code);
+            }
             _ => {
               // end html code
-              let satysfi_code = html2satysfi::html_to_satysfi_code(&html_str);
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Inline);
+              s.push_str(&satysfi_code);
+            }
+          }
+        } else if start_tag_re.is_match(&html_code) {
+          match mode.now() {
+            TextMode::HtmlComment => html_str.push_str(&html_code),
+            _ => {
+              mode = mode.push(TextMode::Html);
+              html_str.push_str(&html_code)
+            }
+          }
+        } else if end_tag_re.is_match(&html_code) {
+          match mode.now() {
+            TextMode::HtmlComment => html_str.push_str(&html_code),
+            _ => {
+              mode = mode.pop();
+            }
+          };
+          html_str.push_str(&html_code);
+          match mode.now() {
+            TextMode::Html | TextMode::HtmlComment => {}
+            TextMode::Block => {
+              // end html code
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Block);
+              s.push_str(&satysfi_code);
+              html_str = String::new();
+            }
+            TextMode::Code => {
+              // end html code
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Code);
+              s.push_str(&satysfi_code);
+              html_str = String::new();
+            }
+            _ => {
+              // end html code
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Inline);
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
           }
-        } else if start_end_re.is_match(&html_code) {
+        } else if one_line_comment_re.is_match(&html_code) {
+        } else if comment_start_re.is_match(&html_code) {
+          mode = mode.push(TextMode::HtmlComment);
           html_str.push_str(&html_code);
+        } else if comment_end_re.is_match(&html_code) {
           match mode.now() {
-            TextMode::Html => {}
-            _ => {
+            TextMode::HtmlComment => {
+              mode = mode.pop();
+              html_str.push_str(&html_code);
+            }
+            TextMode::Html => {
+              html_str.push_str(&html_code);
+            }
+            TextMode::Code => {
+              code_str.push_str(&html_code);
+            }
+            _ => {}
+          }
+          match mode.now() {
+            TextMode::Html | TextMode::HtmlComment => {}
+            TextMode::Block => {
               // end html code
-              let satysfi_code = html2satysfi::html_to_satysfi_code(&html_str);
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Block);
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
+            TextMode::Code => {
+              // end html code
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Code);
+              s.push_str(&satysfi_code);
+              html_str = String::new();
+            }
+            _ => {
+              // end html code
+              let satysfi_code =
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Inline);
+              s.push_str(&satysfi_code);
+              html_str = String::new();
+            }
+          }
+        } else {
+          match mode.now() {
+            TextMode::Html => html_str.push_str(&html_code),
+            TextMode::HtmlComment => html_str.push_str(&html_code),
+            _ => {}
           }
         }
       }
