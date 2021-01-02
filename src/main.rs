@@ -1,12 +1,12 @@
 extern crate mdbook;
 extern crate pulldown_cmark;
 
-// use mdbook::config::Config;
 use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Write};
 use std::path;
+use toml::map;
 //use std::process;
 
 mod md2satysfi;
@@ -25,6 +25,14 @@ fn main() {
 
   let cfg = &ctx.config;
   let book = &cfg.book;
+  let satysfi_cfg = match &cfg
+    .get("output.satysfi")
+    .map(|toml| toml.as_table())
+    .flatten()
+  {
+    None => map::Map::new(),
+    Some(map) => (*map).clone(),
+  };
 
   let title = &book.clone().title.unwrap_or_default();
   let authors = &book.authors;
@@ -43,6 +51,57 @@ fn main() {
     })
     .collect::<String>();
 
+  let require_packages_str = &satysfi_cfg
+    .get("require-packages")
+    .map(|v| {
+      let s_opt = {
+        v.as_array().map(|lst| {
+          let new = lst
+            .iter()
+            .map(|v| v.as_str())
+            .filter(|opt| opt.is_some())
+            .map(|opt| opt.unwrap_or_default())
+            .collect::<Vec<_>>();
+          if new.len() < lst.len() {
+            eprintln!(r#""output.satysfi.require-packages" require type "string array""#);
+            String::new()
+          } else {
+            new.iter().map(|s| format!("@require: {}\n", s)).collect()
+          }
+        })
+      };
+      s_opt.unwrap_or_else(|| {
+        eprintln!(r#""output.satysfi.require-packages" require type "string array""#);
+        String::new()
+      })
+    })
+    .unwrap_or_default();
+  let import_packages_str = &satysfi_cfg
+    .get("import-packages")
+    .map(|v| {
+      let s_opt = {
+        v.as_array().map(|lst| {
+          let new = lst
+            .iter()
+            .map(|v| v.as_str())
+            .filter(|opt| opt.is_some())
+            .map(|opt| opt.unwrap_or_default())
+            .collect::<Vec<_>>();
+          if new.len() < lst.len() {
+            eprintln!(r#""output.satysfi.import-packages" require type "string array""#);
+            String::new()
+          } else {
+            new.iter().map(|s| format!("@import: {}\n", s)).collect()
+          }
+        })
+      };
+      s_opt.unwrap_or_else(|| {
+        eprintln!(r#""output.satysfi.import-packages" require type "string array""#);
+        String::new()
+      })
+    })
+    .unwrap_or_default();
+
   f.write_all(
     format!(
       "@require: stdjabook
@@ -51,6 +110,9 @@ fn main() {
 @require: code
 @require: vdecoset
 @require: easytable/easytable
+{require_packages}
+{import_packages}
+
 
 open EasyTableAlias
 
@@ -127,6 +189,8 @@ document (|
   show-toc = false;
   show-title = false;
 |) '<",
+      require_packages = require_packages_str,
+      import_packages = import_packages_str,
       title = title,
       author = author
     )

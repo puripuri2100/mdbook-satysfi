@@ -794,6 +794,7 @@ dependencies = [
  "mdbook",
  "pulldown-cmark 0.8.0",
  "regex",
+ "toml",
 ]
 
 [[package]]
