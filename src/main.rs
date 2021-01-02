@@ -9,6 +9,7 @@ use std::path;
 use toml::map;
 //use std::process;
 
+mod copy;
 mod md2satysfi;
 
 fn main() {
@@ -22,6 +23,10 @@ fn main() {
   let mut f = BufWriter::new(f);
 
   let root = &ctx.source_dir();
+
+  let src_dir = &ctx.root.join(&ctx.config.book.src);
+  let build_dir = &ctx.root.join(&ctx.config.build.build_dir);
+  copy::copy_files_except_ext(src_dir, &destination, Some(build_dir), &["md"]);
 
   let cfg = &ctx.config;
   let book = &cfg.book;
@@ -181,6 +186,12 @@ let-inline ctx \\strong it =
   read-inline ctx it
 
 
+let-inline ctx \\img path title =
+  let image = load-image path in
+  let insert-image = use-image-by-width image 100mm in
+  insert-image
+
+
 in
 
 document (|
@@ -219,12 +230,12 @@ fn write_bookitme(f: &mut BufWriter<File>, item: &BookItem, root: &path::PathBuf
         .as_bytes(),
       )
       .unwrap();
-      let path_opt = ch.clone().path;
-      match path_opt {
+      let ch_file_path_opt = ch.clone().path;
+      match ch_file_path_opt {
         None => (),
-        Some(path) => {
-          let path = root.join(path);
-          let s = md2satysfi::md_to_satysfi_code(ch.clone().content, &path).unwrap();
+        Some(ch_file_path) => {
+          let path = root.join(&ch_file_path);
+          let s = md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path).unwrap();
           f.write_all(s.as_bytes()).unwrap()
         }
       };

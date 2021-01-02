@@ -85,17 +85,25 @@ fn check_mode() {
   assert_eq!(TextMode::Block, stack.now());
 }
 
-pub fn md_to_satysfi_code(md_text: String, file_path: &path::PathBuf) -> Result<String, ()> {
+pub fn md_to_satysfi_code(
+  md_text: String,
+  file_path: &path::PathBuf,
+  ch_file_path: &path::PathBuf,
+) -> Result<String, ()> {
   let mut options = Options::empty();
   options.insert(Options::ENABLE_TABLES);
   options.insert(Options::ENABLE_FOOTNOTES);
   options.insert(Options::ENABLE_TASKLISTS);
   options.insert(Options::ENABLE_SMART_PUNCTUATION);
   let parser = Parser::new_ext(&md_text, options);
-  parser_to_code(parser, file_path)
+  parser_to_code(parser, file_path, ch_file_path)
 }
 
-fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, ()> {
+fn parser_to_code(
+  parser: Parser,
+  file_path: &path::PathBuf,
+  ch_file_path: &path::PathBuf,
+) -> Result<String, ()> {
   let mut s = String::new();
   let mut code_str = String::new();
   let mut html_str = String::new();
@@ -160,12 +168,13 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           s.push_str(&format!("\\href (``` {url} ```) {{", url = link,));
           mode = mode.push(TextMode::Inline);
         }
-        Tag::Image(_link_type, _link, _title) => {
-          //s.push_str(&format!(
-          //  "\\href(``` {link} ```){{{title}}}{{",
-          //  link = link,
-          //  title = title
-          //));
+        Tag::Image(_link_type, link, _title) => {
+          let path_str = format!(
+            "{}/{}",
+            ch_file_path.parent().unwrap().to_str().unwrap(),
+            &link
+          );
+          s.push_str(&format!("\\img(``` {link} ```){{", link = path_str));
           mode = mode.push(TextMode::Inline);
         }
       },
@@ -222,7 +231,7 @@ fn parser_to_code(parser: Parser, file_path: &path::PathBuf) -> Result<String, (
           mode = mode.pop();
         }
         Tag::Image(_, _, _) => {
-          //s.push_str("}");
+          s.push('}');
           mode = mode.pop();
         }
       },
