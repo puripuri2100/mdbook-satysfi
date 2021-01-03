@@ -38,6 +38,14 @@ fn main() {
     None => map::Map::new(),
     Some(map) => (*map).clone(),
   };
+  let html_cfg = match &cfg
+    .get("output.satysfi.html")
+    .map(|toml| toml.as_table())
+    .flatten()
+  {
+    None => map::Map::new(),
+    Some(map) => (*map).clone(),
+  };
 
   let title = &book.clone().title.unwrap_or_default();
   let authors = &book.authors;
@@ -212,11 +220,16 @@ document (|
   ctx
     .book
     .iter()
-    .for_each(|item| write_bookitme(&mut f, item, &root));
+    .for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg));
   f.write_all(b">").unwrap();
 }
 
-fn write_bookitme(f: &mut BufWriter<File>, item: &BookItem, root: &path::PathBuf) {
+fn write_bookitme(
+  f: &mut BufWriter<File>,
+  item: &BookItem,
+  root: &path::PathBuf,
+  html_cfg: &map::Map<String, toml::Value>,
+) {
   let indent_str = "  ".to_string();
   match item {
     BookItem::Chapter(ch) => {
@@ -235,7 +248,9 @@ fn write_bookitme(f: &mut BufWriter<File>, item: &BookItem, root: &path::PathBuf
         None => (),
         Some(ch_file_path) => {
           let path = root.join(&ch_file_path);
-          let s = md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path).unwrap();
+          let s =
+            md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path, html_cfg)
+              .unwrap();
           f.write_all(s.as_bytes()).unwrap()
         }
       };
