@@ -1,6 +1,6 @@
 use html_parser::{Dom, Node};
-use std::collections::hash_map::HashMap;
 use toml::map;
+use toml::value;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Mode {
@@ -37,11 +37,15 @@ fn node_to_satysfi_code(
       let tag_name = &element.name.to_lowercase();
       let children = &element.children;
       let attributes = &element.attributes;
-      let toml_data_opt = html_cfg.get(tag_name);
+      let default_cfg = make_default_config();
+      let toml_data_opt = match html_cfg.get(tag_name) {
+        Some(data) => Some(data),
+        None => default_cfg.get(tag_name),
+      };
       match toml_data_opt {
         Some(toml_data) => {
           let command_name = toml_data
-            .get("command-name")
+            .get("command_name")
             .map(|v| v.as_str())
             .flatten()
             .unwrap_or(tag_name);
@@ -55,42 +59,60 @@ fn node_to_satysfi_code(
             None => Vec::new(),
           };
           let children_str = match children_type_opt {
-            None => String::new(),
+            None => ";".to_string(),
             Some(children_type) => match children_type {
               ChildrenType::BlockText => {
                 let children_str = children
                   .iter()
-                  .map(|node| node_to_satysfi_code(node, Mode::Block, html_cfg))
+                  .map(|node| match mode {
+                    Mode::Code => node_to_satysfi_code(node, Mode::Code, html_cfg),
+                    _ => node_to_satysfi_code(node, Mode::Block, html_cfg),
+                  })
                   .collect::<String>();
-                format!("<{}>", children_str)
+                match mode {
+                  Mode::Code => children_str,
+                  _ => format!("<{}>", children_str),
+                }
               }
               ChildrenType::InlineText => {
                 let children_str = children
                   .iter()
-                  .map(|node| node_to_satysfi_code(node, Mode::Inline, html_cfg))
+                  .map(|node| match mode {
+                    Mode::Code => node_to_satysfi_code(node, Mode::Code, html_cfg),
+                    _ => node_to_satysfi_code(node, Mode::Inline, html_cfg),
+                  })
                   .collect::<String>();
-                format!("{{{}}}", children_str)
+                match mode {
+                  Mode::Code => children_str,
+                  _ => format!("{{{}}}", children_str),
+                }
               }
               ChildrenType::BlockCode => {
                 let children_str = children
                   .iter()
                   .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg))
                   .collect::<String>();
-                format!("({});", make_code(true, &children_str))
+                match mode {
+                  Mode::Code => children_str,
+                  _ => format!("({});", make_code(true, &children_str)),
+                }
               }
               ChildrenType::InlineCode => {
                 let children_str = children
                   .iter()
                   .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg))
                   .collect::<String>();
-                format!("({});", make_code(false, &children_str))
+                match mode {
+                  Mode::Code => children_str,
+                  _ => format!("({});", make_code(false, &children_str)),
+                }
               }
             },
           };
           let attributes_str = attribute_cfg_lst
             .iter()
             .map(|toml| {
-              let attribute_name_opt = toml.get("toml").map(|v| v.as_str()).flatten();
+              let attribute_name_opt = toml.get("name").map(|v| v.as_str()).flatten();
               let attribute_type_opt = toml
                 .get("type")
                 .map(|v| v.as_str().map(|s| parse_attribute_type(s)))
@@ -177,7 +199,7 @@ fn node_to_satysfi_code(
             }
             Mode::Code => {
               format!(
-                "<{tag_name} {attributes_str}>{children_str}</{tag_name}>",
+                "<{tag_name}{attributes_str}>{children_str}</{tag_name}>",
                 tag_name = tag_name,
                 attributes_str = attributes_str,
                 children_str = children_str
@@ -280,6 +302,94 @@ fn parse_attribute_type(type_str: &str) -> Option<AttributeTypeOrOption> {
     "string option" => Some(AttributeTypeOrOption::Option(AttributeType::String)),
     _ => None,
   }
+}
+
+fn make_default_config() -> map::Map<String, toml::Value> {
+  let mut default_config = map::Map::new();
+
+  // <p></p>
+  let mut p_value_table = map::Map::new();
+  p_value_table.insert(
+    "command_name".to_string(),
+    value::Value::String("p".to_string()),
+  );
+  p_value_table.insert(
+    "children_type".to_string(),
+    value::Value::String("inline".to_string()),
+  );
+  let p_value = value::Value::Table(p_value_table);
+  default_config.insert("p".to_string(), p_value);
+
+  // <ruby></ruby>
+  let mut ruby_value_table = map::Map::new();
+  ruby_value_table.insert(
+    "command_name".to_string(),
+    value::Value::String("ruby".to_string()),
+  );
+  ruby_value_table.insert(
+    "children_type".to_string(),
+    value::Value::String("inline".to_string()),
+  );
+  let ruby_value = value::Value::Table(ruby_value_table);
+  default_config.insert("ruby".to_string(), ruby_value);
+
+  // <rt></rt>
+  let mut rt_value_table = map::Map::new();
+  rt_value_table.insert(
+    "command_name".to_string(),
+    value::Value::String("rt".to_string()),
+  );
+  rt_value_table.insert(
+    "children_type".to_string(),
+    value::Value::String("inline".to_string()),
+  );
+  let rt_value = value::Value::Table(rt_value_table);
+  default_config.insert("rt".to_string(), rt_value);
+
+  // <rp></rp>
+  let mut rp_value_table = map::Map::new();
+  rp_value_table.insert(
+    "command_name".to_string(),
+    value::Value::String("rp".to_string()),
+  );
+  rp_value_table.insert(
+    "children_type".to_string(),
+    value::Value::String("inline".to_string()),
+  );
+  let rp_value = value::Value::Table(rp_value_table);
+  default_config.insert("rp".to_string(), rp_value);
+
+  // <code></code>
+  let mut code_value_table = map::Map::new();
+  code_value_table.insert(
+    "command_name".to_string(),
+    value::Value::String("code".to_string()),
+  );
+  code_value_table.insert(
+    "children_type".to_string(),
+    value::Value::String("inline code".to_string()),
+  );
+  let code_value = value::Value::Table(code_value_table);
+  default_config.insert("code".to_string(), code_value);
+
+  // <img src="link"/>
+  let mut img_value_table = map::Map::new();
+  img_value_table.insert(
+    "command_name".to_string(),
+    value::Value::String("img".to_string()),
+  );
+  let mut img_attibute_table = map::Map::new();
+  img_attibute_table.insert("name".to_string(), value::Value::String("src".to_string()));
+  img_attibute_table.insert("type".to_string(), value::Value::String("link".to_string()));
+  let img_attibute_vec = vec![value::Value::Table(img_attibute_table)];
+  img_value_table.insert(
+    "attribute".to_string(),
+    value::Value::Array(img_attibute_vec),
+  );
+  let img_value = value::Value::Table(img_value_table);
+  default_config.insert("img".to_string(), img_value);
+
+  default_config
 }
 
 //fn tag_p_to_code(
