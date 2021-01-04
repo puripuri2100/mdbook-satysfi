@@ -54,35 +54,142 @@ fn node_to_satysfi_code(
             Some(v) => v.clone(),
             None => Vec::new(),
           };
-          tag_to_satysfi_str(
-            &mode,
-            tag_name,
-            &command_name,
-            &children_type_opt,
-            children,
-            attributes,
-            &attribute_cfg_lst,
-            html_cfg,
-          )
+          let children_str = match children_type_opt {
+            None => String::new(),
+            Some(children_type) => match children_type {
+              ChildrenType::BlockText => {
+                let children_str = children
+                  .iter()
+                  .map(|node| node_to_satysfi_code(node, Mode::Block, html_cfg))
+                  .collect::<String>();
+                format!("<{}>", children_str)
+              }
+              ChildrenType::InlineText => {
+                let children_str = children
+                  .iter()
+                  .map(|node| node_to_satysfi_code(node, Mode::Inline, html_cfg))
+                  .collect::<String>();
+                format!("{{{}}}", children_str)
+              }
+              ChildrenType::BlockCode => {
+                let children_str = children
+                  .iter()
+                  .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg))
+                  .collect::<String>();
+                format!("({});", make_code(true, &children_str))
+              }
+              ChildrenType::InlineCode => {
+                let children_str = children
+                  .iter()
+                  .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg))
+                  .collect::<String>();
+                format!("({});", make_code(false, &children_str))
+              }
+            },
+          };
+          let attributes_str = attribute_cfg_lst
+            .iter()
+            .map(|toml| {
+              let attribute_name_opt = toml.get("toml").map(|v| v.as_str()).flatten();
+              let attribute_type_opt = toml
+                .get("type")
+                .map(|v| v.as_str().map(|s| parse_attribute_type(s)))
+                .flatten()
+                .flatten();
+              match (attribute_name_opt, attribute_type_opt) {
+                (Some(attribute_name), Some(attribute_type)) => match mode {
+                  Mode::Code => {
+                    let attribute_value_opt = attributes.get(attribute_name).unwrap_or(&None);
+                    match attribute_type {
+                      AttributeTypeOrOption::Option(_) => match attribute_value_opt {
+                        None => String::new(),
+                        Some(attribute_value) => {
+                          format!(r#" {}="{}""#, attribute_name, attribute_value)
+                        }
+                      },
+                      AttributeTypeOrOption::Normal(_) => {
+                        let attribute_value = attribute_value_opt.clone().unwrap();
+                        format!(r#" {}="{}""#, attribute_name, attribute_value)
+                      }
+                    }
+                  }
+                  _ => {
+                    let attribute_value_opt = attributes.get(attribute_name).unwrap_or(&None);
+                    match attribute_type {
+                      AttributeTypeOrOption::Option(attribute_type) => match attribute_value_opt {
+                        None => "(None)".to_string(),
+                        Some(attribute_value) => match attribute_type {
+                          AttributeType::BlockText => format!(r#"(Some('<{}>))"#, attribute_value),
+                          AttributeType::InlineText => {
+                            format!(r#"(Some({{{}}}))"#, attribute_value)
+                          }
+                          AttributeType::String => {
+                            format!(r#"(Some({}))"#, make_code(false, attribute_value))
+                          }
+                          AttributeType::Link => {
+                            format!(r#"(Some({}))"#, make_code(false, attribute_value))
+                          }
+                        },
+                      },
+                      AttributeTypeOrOption::Normal(attribute_type) => match attribute_value_opt {
+                        None => {
+                          eprintln!(r#""{}" tag is not supported"#, tag_name);
+                          String::new()
+                        }
+                        Some(attribute_value) => match attribute_type {
+                          AttributeType::BlockText => {
+                            format!(r#"('<{}>)"#, attribute_value)
+                          }
+                          AttributeType::InlineText => {
+                            format!(r#"({{{}}})"#, attribute_value)
+                          }
+                          AttributeType::String => {
+                            format!(r#"({})"#, make_code(false, &attribute_value))
+                          }
+                          AttributeType::Link => {
+                            format!(r#"({})"#, make_code(false, &attribute_value))
+                          }
+                        },
+                      },
+                    }
+                  }
+                },
+                _ => String::new(),
+              }
+            })
+            .collect::<String>();
+          match mode {
+            Mode::Block => {
+              format!(
+                "+{command_name}{attributes_str}{children_str}",
+                command_name = command_name,
+                attributes_str = attributes_str,
+                children_str = children_str
+              )
+            }
+            Mode::Inline => {
+              format!(
+                "\\{command_name}{attributes_str}{children_str}",
+                command_name = command_name,
+                attributes_str = attributes_str,
+                children_str = children_str
+              )
+            }
+            Mode::Code => {
+              format!(
+                "<{tag_name} {attributes_str}>{children_str}</{tag_name}>",
+                tag_name = tag_name,
+                attributes_str = attributes_str,
+                children_str = children_str
+              )
+            }
+          }
         }
         None => {
           eprintln!(r#""{}" tag is not supported"#, tag_name);
           String::new()
         }
       }
-      //match tag_name.as_str() {
-      //  "p" => tag_p_to_code(&attributes, &children, &mode),
-      //  "code" => tag_code_to_code(&attributes, &children, &mode),
-      //  "img" => tag_img_to_code(&attributes, &children, &mode),
-      //  "span" => tag_span_to_code(&attributes, &children, &mode),
-      //  "ruby" => tag_ruby_to_code(&attributes, &children, &mode),
-      //  "rp" => tag_rp_to_code(&attributes, &children, &mode),
-      //  "rt" => tag_rt_to_code(&attributes, &children, &mode),
-      //  _ => {
-      //    eprintln!(r#""{}" tag is not supported"#, tag_name);
-      //    String::new()
-      //  }
-      //}
     }
   }
 }
@@ -138,7 +245,7 @@ fn parse_children_type(type_str: &str) -> Option<ChildrenType> {
     "inline-text" => Some(ChildrenType::InlineText),
     "block-text" => Some(ChildrenType::BlockText),
     "inline code" => Some(ChildrenType::InlineCode),
-    "block code" => Some(ChildrenType::InlineCode),
+    "block code" => Some(ChildrenType::BlockCode),
     _ => None,
   }
 }
@@ -172,88 +279,6 @@ fn parse_attribute_type(type_str: &str) -> Option<AttributeTypeOrOption> {
     "string" => Some(AttributeTypeOrOption::Normal(AttributeType::String)),
     "string option" => Some(AttributeTypeOrOption::Option(AttributeType::String)),
     _ => None,
-  }
-}
-
-fn tag_to_satysfi_str(
-  mode: &Mode,
-  tag_name: &str,
-  command_name: &str,
-  children_type_opt: &Option<ChildrenType>,
-  children: &Vec<Node>,
-  attributes: &HashMap<String, Option<String>>,
-  attribute_cfg_lst: &Vec<toml::Value>,
-  html_cfg: &map::Map<String, toml::Value>,
-) -> String {
-  let children_str = match children_type_opt {
-    None => String::new(),
-    Some(children_type) => match children_type {
-      ChildrenType::BlockText => {
-        let children_str = children
-          .iter()
-          .map(|node| node_to_satysfi_code(node, Mode::Block, html_cfg))
-          .collect::<String>();
-        format!("<{}>", children_str)
-      }
-      ChildrenType::InlineText => {
-        let children_str = children
-          .iter()
-          .map(|node| node_to_satysfi_code(node, Mode::Inline, html_cfg))
-          .collect::<String>();
-        format!("{{{}}}", children_str)
-      }
-      ChildrenType::BlockCode => {
-        let children_str = children
-          .iter()
-          .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg))
-          .collect::<String>();
-        format!("({});", make_code(true, &children_str))
-      }
-      ChildrenType::InlineCode => {
-        let children_str = children
-          .iter()
-          .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg))
-          .collect::<String>();
-        format!("({});", make_code(false, &children_str))
-      }
-    },
-  };
-  let attributes_str = attribute_cfg_lst
-    .iter()
-    .map(|toml| {
-      let name = toml.get("toml");
-      let type_normal_or_opt = toml.get("type");
-      match mode {
-        Mode::Code => String::new(),
-        _ => String::new(),
-      }
-    })
-    .collect::<String>();
-  match mode {
-    Mode::Block => {
-      format!(
-        "+{command_name}{attributes_str}{children_str}",
-        command_name = command_name,
-        attributes_str = attributes_str,
-        children_str = children_str
-      )
-    }
-    Mode::Inline => {
-      format!(
-        "\\{command_name}{attributes_str}{children_str}",
-        command_name = command_name,
-        attributes_str = attributes_str,
-        children_str = children_str
-      )
-    }
-    Mode::Code => {
-      format!(
-        "<{tag_name} {attributes_str}>{children_str}</{tag_name}>",
-        tag_name = tag_name,
-        attributes_str = attributes_str,
-        children_str = children_str
-      )
-    }
   }
 }
 
