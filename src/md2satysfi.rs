@@ -5,6 +5,7 @@ use pulldown_cmark::Parser;
 use pulldown_cmark::Tag;
 use regex::Regex;
 use std::path;
+use toml::map;
 
 mod html2satysfi;
 mod mdbook_specific_features;
@@ -89,6 +90,7 @@ pub fn md_to_satysfi_code(
   md_text: String,
   file_path: &path::PathBuf,
   ch_file_path: &path::PathBuf,
+  html_cfg: &map::Map<String, toml::Value>,
 ) -> Result<String, ()> {
   let mut options = Options::empty();
   options.insert(Options::ENABLE_TABLES);
@@ -96,13 +98,14 @@ pub fn md_to_satysfi_code(
   options.insert(Options::ENABLE_TASKLISTS);
   options.insert(Options::ENABLE_SMART_PUNCTUATION);
   let parser = Parser::new_ext(&md_text, options);
-  parser_to_code(parser, file_path, ch_file_path)
+  parser_to_code(parser, file_path, ch_file_path, html_cfg)
 }
 
 fn parser_to_code(
   parser: Parser,
   file_path: &path::PathBuf,
   ch_file_path: &path::PathBuf,
+  html_cfg: &map::Map<String, toml::Value>,
 ) -> Result<String, ()> {
   let mut s = String::new();
   let mut code_str = String::new();
@@ -282,19 +285,22 @@ fn parser_to_code(
             TextMode::Block => {
               // end html code
               let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Block);
+                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Block, html_cfg);
               s.push_str(&satysfi_code);
             }
             TextMode::Code => {
               // end html code
               let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Code);
+                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Code, html_cfg);
               s.push_str(&satysfi_code);
             }
             _ => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Inline);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_code,
+                html2satysfi::Mode::Inline,
+                html_cfg,
+              );
               s.push_str(&satysfi_code);
             }
           }
@@ -319,21 +325,21 @@ fn parser_to_code(
             TextMode::Block => {
               // end html code
               let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Block);
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Block, html_cfg);
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
             TextMode::Code => {
               // end html code
               let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Code);
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Code, html_cfg);
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
             _ => {
               // end html code
               let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Inline);
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Inline, html_cfg);
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
@@ -361,21 +367,21 @@ fn parser_to_code(
             TextMode::Block => {
               // end html code
               let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Block);
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Block, html_cfg);
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
             TextMode::Code => {
               // end html code
               let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Code);
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Code, html_cfg);
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
             _ => {
               // end html code
               let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Inline);
+                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Inline, html_cfg);
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
