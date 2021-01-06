@@ -1,6 +1,5 @@
 use html_parser::{Dom, Node};
 use toml::map;
-use toml::value;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Mode {
@@ -304,92 +303,36 @@ fn parse_attribute_type(type_str: &str) -> Option<AttributeTypeOrOption> {
   }
 }
 
+const DEFAULT_HTML_CONFIG: &str = r#"
+[p]
+  command_name="p"
+  children_type="inline"
+[code]
+  command_name="code"
+  children_type="inline code"
+[ruby]
+  command_name="ruby"
+  children_type="inline"
+[rp]
+  command_name="rp"
+  children_type="inline"
+[rt]
+  command_name="rt"
+  children_type="inline"
+[img]
+  command_name="img"
+  [[img.attribute]]
+    "name" = "src"
+    "type" = "link"
+"#;
+
 fn make_default_config() -> map::Map<String, toml::Value> {
-  let mut default_config = map::Map::new();
-
-  // <p></p>
-  let mut p_value_table = map::Map::new();
-  p_value_table.insert(
-    "command_name".to_string(),
-    value::Value::String("p".to_string()),
-  );
-  p_value_table.insert(
-    "children_type".to_string(),
-    value::Value::String("inline".to_string()),
-  );
-  let p_value = value::Value::Table(p_value_table);
-  default_config.insert("p".to_string(), p_value);
-
-  // <ruby></ruby>
-  let mut ruby_value_table = map::Map::new();
-  ruby_value_table.insert(
-    "command_name".to_string(),
-    value::Value::String("ruby".to_string()),
-  );
-  ruby_value_table.insert(
-    "children_type".to_string(),
-    value::Value::String("inline".to_string()),
-  );
-  let ruby_value = value::Value::Table(ruby_value_table);
-  default_config.insert("ruby".to_string(), ruby_value);
-
-  // <rt></rt>
-  let mut rt_value_table = map::Map::new();
-  rt_value_table.insert(
-    "command_name".to_string(),
-    value::Value::String("rt".to_string()),
-  );
-  rt_value_table.insert(
-    "children_type".to_string(),
-    value::Value::String("inline".to_string()),
-  );
-  let rt_value = value::Value::Table(rt_value_table);
-  default_config.insert("rt".to_string(), rt_value);
-
-  // <rp></rp>
-  let mut rp_value_table = map::Map::new();
-  rp_value_table.insert(
-    "command_name".to_string(),
-    value::Value::String("rp".to_string()),
-  );
-  rp_value_table.insert(
-    "children_type".to_string(),
-    value::Value::String("inline".to_string()),
-  );
-  let rp_value = value::Value::Table(rp_value_table);
-  default_config.insert("rp".to_string(), rp_value);
-
-  // <code></code>
-  let mut code_value_table = map::Map::new();
-  code_value_table.insert(
-    "command_name".to_string(),
-    value::Value::String("code".to_string()),
-  );
-  code_value_table.insert(
-    "children_type".to_string(),
-    value::Value::String("inline code".to_string()),
-  );
-  let code_value = value::Value::Table(code_value_table);
-  default_config.insert("code".to_string(), code_value);
-
-  // <img src="link"/>
-  let mut img_value_table = map::Map::new();
-  img_value_table.insert(
-    "command_name".to_string(),
-    value::Value::String("img".to_string()),
-  );
-  let mut img_attibute_table = map::Map::new();
-  img_attibute_table.insert("name".to_string(), value::Value::String("src".to_string()));
-  img_attibute_table.insert("type".to_string(), value::Value::String("link".to_string()));
-  let img_attibute_vec = vec![value::Value::Table(img_attibute_table)];
-  img_value_table.insert(
-    "attribute".to_string(),
-    value::Value::Array(img_attibute_vec),
-  );
-  let img_value = value::Value::Table(img_value_table);
-  default_config.insert("img".to_string(), img_value);
-
-  default_config
+  DEFAULT_HTML_CONFIG
+    .parse::<toml::Value>()
+    .unwrap()
+    .as_table()
+    .unwrap()
+    .clone()
 }
 
 fn escape_inline_text(text: &str) -> String {
