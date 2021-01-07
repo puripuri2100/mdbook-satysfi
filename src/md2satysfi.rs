@@ -284,14 +284,22 @@ fn parser_to_code(
             TextMode::Html | TextMode::HtmlComment => html_str.push_str(&html_code),
             TextMode::Block => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Block, html_cfg);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_code,
+                html2satysfi::Mode::Block,
+                html_cfg,
+                ch_file_path,
+              );
               s.push_str(&satysfi_code);
             }
             TextMode::Code => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_code, html2satysfi::Mode::Code, html_cfg);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_code,
+                html2satysfi::Mode::Code,
+                html_cfg,
+                ch_file_path,
+              );
               s.push_str(&satysfi_code);
             }
             _ => {
@@ -300,6 +308,7 @@ fn parser_to_code(
                 &html_code,
                 html2satysfi::Mode::Inline,
                 html_cfg,
+                ch_file_path,
               );
               s.push_str(&satysfi_code);
             }
@@ -324,22 +333,34 @@ fn parser_to_code(
             TextMode::Html | TextMode::HtmlComment => {}
             TextMode::Block => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Block, html_cfg);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_str,
+                html2satysfi::Mode::Block,
+                html_cfg,
+                ch_file_path,
+              );
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
             TextMode::Code => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Code, html_cfg);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_str,
+                html2satysfi::Mode::Code,
+                html_cfg,
+                ch_file_path,
+              );
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
             _ => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Inline, html_cfg);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_str,
+                html2satysfi::Mode::Inline,
+                html_cfg,
+                ch_file_path,
+              );
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
@@ -366,22 +387,34 @@ fn parser_to_code(
             TextMode::Html | TextMode::HtmlComment => {}
             TextMode::Block => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Block, html_cfg);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_str,
+                html2satysfi::Mode::Block,
+                html_cfg,
+                ch_file_path,
+              );
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
             TextMode::Code => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Code, html_cfg);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_str,
+                html2satysfi::Mode::Code,
+                html_cfg,
+                ch_file_path,
+              );
               s.push_str(&satysfi_code);
               html_str = String::new();
             }
             _ => {
               // end html code
-              let satysfi_code =
-                html2satysfi::html_to_satysfi_code(&html_str, html2satysfi::Mode::Inline, html_cfg);
+              let satysfi_code = html2satysfi::html_to_satysfi_code(
+                &html_str,
+                html2satysfi::Mode::Inline,
+                html_cfg,
+                ch_file_path,
+              );
               s.push_str(&satysfi_code);
               html_str = String::new();
             }

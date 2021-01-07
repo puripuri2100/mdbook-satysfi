@@ -1,4 +1,5 @@
 use html_parser::{Dom, Node};
+use std::path;
 use toml::map;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -12,11 +13,12 @@ pub fn html_to_satysfi_code(
   html_code: &str,
   mode: Mode,
   html_cfg: &map::Map<String, toml::Value>,
+  ch_file_path: &path::PathBuf,
 ) -> String {
   let node_lst = Dom::parse(html_code).unwrap().children;
   node_lst
     .iter()
-    .map(|node| node_to_satysfi_code(node, mode, html_cfg))
+    .map(|node| node_to_satysfi_code(node, mode, html_cfg, ch_file_path))
     .collect()
 }
 
@@ -24,6 +26,7 @@ fn node_to_satysfi_code(
   node: &Node,
   mode: Mode,
   html_cfg: &map::Map<String, toml::Value>,
+  ch_file_path: &path::PathBuf,
 ) -> String {
   match node {
     Node::Comment(_) => String::new(),
@@ -64,8 +67,8 @@ fn node_to_satysfi_code(
                 let children_str = children
                   .iter()
                   .map(|node| match mode {
-                    Mode::Code => node_to_satysfi_code(node, Mode::Code, html_cfg),
-                    _ => node_to_satysfi_code(node, Mode::Block, html_cfg),
+                    Mode::Code => node_to_satysfi_code(node, Mode::Code, html_cfg, ch_file_path),
+                    _ => node_to_satysfi_code(node, Mode::Block, html_cfg, ch_file_path),
                   })
                   .collect::<String>();
                 match mode {
@@ -77,8 +80,8 @@ fn node_to_satysfi_code(
                 let children_str = children
                   .iter()
                   .map(|node| match mode {
-                    Mode::Code => node_to_satysfi_code(node, Mode::Code, html_cfg),
-                    _ => node_to_satysfi_code(node, Mode::Inline, html_cfg),
+                    Mode::Code => node_to_satysfi_code(node, Mode::Code, html_cfg, ch_file_path),
+                    _ => node_to_satysfi_code(node, Mode::Inline, html_cfg, ch_file_path),
                   })
                   .collect::<String>();
                 match mode {
@@ -89,7 +92,7 @@ fn node_to_satysfi_code(
               ChildrenType::BlockCode => {
                 let children_str = children
                   .iter()
-                  .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg))
+                  .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg, ch_file_path))
                   .collect::<String>();
                 match mode {
                   Mode::Code => children_str,
@@ -99,7 +102,7 @@ fn node_to_satysfi_code(
               ChildrenType::InlineCode => {
                 let children_str = children
                   .iter()
-                  .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg))
+                  .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg, ch_file_path))
                   .collect::<String>();
                 match mode {
                   Mode::Code => children_str,
@@ -148,7 +151,12 @@ fn node_to_satysfi_code(
                             format!(r#"(Some({}))"#, make_code(false, attribute_value))
                           }
                           AttributeType::Link => {
-                            format!(r#"(Some({}))"#, make_code(false, attribute_value))
+                            let link = format!(
+                              "{}/{}",
+                              ch_file_path.parent().unwrap().to_str().unwrap(),
+                              &attribute_value
+                            );
+                            format!(r#"(Some({}))"#, make_code(false, &link))
                           }
                         },
                       },
@@ -168,7 +176,12 @@ fn node_to_satysfi_code(
                             format!(r#"({})"#, make_code(false, &attribute_value))
                           }
                           AttributeType::Link => {
-                            format!(r#"({})"#, make_code(false, &attribute_value))
+                            let link = format!(
+                              "{}/{}",
+                              ch_file_path.parent().unwrap().to_str().unwrap(),
+                              &attribute_value
+                            );
+                            format!(r#"({})"#, make_code(false, &link))
                           }
                         },
                       },
@@ -218,11 +231,13 @@ fn node_to_satysfi_code(
 #[test]
 fn check_html_to_satysfi_code_1() {
   assert_eq!(
-    r#"+p{this is a image.\img(` img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#.to_owned(),
+    r#"+p{this is a image.\img(` ch1/../img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#
+      .to_owned(),
     html_to_satysfi_code(
-      r#"<p> this is a image. <img src="img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
+      r#"<p> this is a image. <img src="../img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
       Mode::Block,
-      &map::Map::new()
+      &map::Map::new(),
+      &path::PathBuf::from("ch1/hoge.md"),
     )
   )
 }
@@ -230,11 +245,13 @@ fn check_html_to_satysfi_code_1() {
 #[test]
 fn check_html_to_satysfi_code_2() {
   assert_eq!(
-    r#"\p{this is a image.\img(` img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#.to_owned(),
+    r#"\p{this is a image.\img(` ch1/../img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#
+      .to_owned(),
     html_to_satysfi_code(
-      r#"<p> this is a image. <img src="img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
+      r#"<p> this is a image. <img src="../img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
       Mode::Inline,
-      &map::Map::new()
+      &map::Map::new(),
+      &path::PathBuf::from("ch1/hoge.md")
     )
   )
 }
@@ -246,7 +263,8 @@ fn check_html_to_satysfi_code_3() {
     html_to_satysfi_code(
       r#"<ruby>如何<rp>(</rp><rt>いか</rt><rp>)</rp></ruby>"#,
       Mode::Inline,
-      &map::Map::new()
+      &map::Map::new(),
+      &path::PathBuf::from("ch1/hoge.md")
     )
   )
 }
