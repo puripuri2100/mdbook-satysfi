@@ -7,10 +7,10 @@ use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Write};
 use std::path;
 use toml::map;
-//use std::process;
 
 mod copy;
 mod md2satysfi;
+mod run_satysfi;
 
 fn main() {
   let stdin = io::stdin();
@@ -45,6 +45,21 @@ fn main() {
   {
     None => map::Map::new(),
     Some(map) => (*map).clone(),
+  };
+  let pdf_toml_value_opt = &cfg.get("output.satysfi.pdf");
+  let pdf_cfg_opt = match (
+    pdf_toml_value_opt.map(|v| v.as_bool()).flatten(),
+    pdf_toml_value_opt.map(|v| v.as_table()).flatten(),
+  ) {
+    (_, Some(t)) => Some(t.clone()),
+    (Some(b), _) => {
+      if b {
+        Some(map::Map::new())
+      } else {
+        None
+      }
+    }
+    _ => None,
   };
 
   let title = &book.clone().title.unwrap_or_default();
@@ -221,7 +236,11 @@ document (|
     .book
     .iter()
     .for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg));
-  f.write_all(b">").unwrap();
+  f.write_all(b">\n").unwrap();
+  if let Some(pdf_cfg) = pdf_cfg_opt {
+    let msg = run_satysfi::run_satysfi(destination, pdf_cfg);
+    println!("{}", String::from_utf8(msg).unwrap())
+  }
 }
 
 fn write_bookitme(
