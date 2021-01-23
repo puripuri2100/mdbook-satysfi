@@ -314,9 +314,10 @@ fn parser_to_code(
         }
       },
       Event::Html(html_code) => {
+        let html_code = html_code.trim();
         let start_tag_re =
           Regex::new("^((<[^!/]>|<[^!/][^<]*[^/]>).*|<[^!/]|<[^!/][^<>/]*)").unwrap();
-        let end_tag_re = Regex::new(".*</[^>]*[^/]>").unwrap();
+        let end_tag_re = Regex::new(".*</[^>]*[^/]>$").unwrap();
         let start_end_re =
           Regex::new("((<[^!/]>|<[^!/][^<]*[^/]>).*</[^>]*[^/]>)|<[^!/].*/>").unwrap();
         let one_line_comment_re = Regex::new("<!--[\\s\\S]*?-->").unwrap();
@@ -354,14 +355,6 @@ fn parser_to_code(
                 ch_file_path,
               );
               s.push_str(&satysfi_code);
-            }
-          }
-        } else if start_tag_re.is_match(&html_code) {
-          match mode.now() {
-            TextMode::HtmlComment => html_str.push_str(&html_code),
-            _ => {
-              mode = mode.push(TextMode::Html);
-              html_str.push_str(&html_code)
             }
           }
         } else if end_tag_re.is_match(&html_code) {
@@ -460,6 +453,14 @@ fn parser_to_code(
               );
               s.push_str(&satysfi_code);
               html_str = String::new();
+            }
+          }
+        } else if start_tag_re.is_match(&html_code) {
+          match mode.now() {
+            TextMode::HtmlComment => html_str.push_str(&html_code),
+            _ => {
+              mode = mode.push(TextMode::Html);
+              html_str.push_str(&html_code)
             }
           }
         } else {

@@ -340,8 +340,11 @@ const DEFAULT_HTML_CONFIG: &str = r#"
 [img]
   command_name="img"
   [[img.attribute]]
-    "name" = "src"
-    "type" = "link"
+    name = "alt"
+    type = "inline-text option"
+  [[img.attribute]]
+    name = "src"
+    type = "link"
 "#;
 
 fn make_default_config() -> map::Map<String, toml::Value> {
