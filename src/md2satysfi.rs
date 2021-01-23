@@ -95,6 +95,7 @@ pub fn md_to_satysfi_code(
   let mut options = Options::empty();
   options.insert(Options::ENABLE_TABLES);
   options.insert(Options::ENABLE_FOOTNOTES);
+  options.insert(Options::ENABLE_STRIKETHROUGH);
   options.insert(Options::ENABLE_TASKLISTS);
   options.insert(Options::ENABLE_SMART_PUNCTUATION);
   let parser = Parser::new_ext(&md_text, options);
@@ -116,8 +117,12 @@ fn parser_to_code(
       Event::Start(tag) => match tag {
         Tag::Paragraph => match mode.now() {
           TextMode::Html | TextMode::HtmlComment => {}
-          _ => {
+          TextMode::Block => {
             s.push_str("+p {");
+            mode = mode.push(TextMode::Inline)
+          }
+          _ => {
+            s.push_str("\\p {");
             mode = mode.push(TextMode::Inline)
           }
         },
@@ -133,12 +138,31 @@ fn parser_to_code(
           s.push_str("+code (");
           mode = mode.push(TextMode::Code);
         }
-        Tag::List(_dep_opt) => {
-          s.push_str("+listing {\n");
+        Tag::List(dep_opt) => {
+          let escape = match mode.now() {
+            TextMode::Block => "+",
+            _ => "\\",
+          };
+          match dep_opt {
+            None => s.push_str(&format!("{}listing {{", escape)),
+            Some(n) => s.push_str(&format!("{}enumerate ({}) {{", escape, n)),
+          };
           mode = mode.push(TextMode::List);
         }
-        Tag::Item => s.push_str("* "),
-        Tag::FootnoteDefinition(_text) => {}
+        Tag::Item => {
+          mode = mode.push(TextMode::Inline);
+          s.push_str("| \\item {")
+        }
+        Tag::FootnoteDefinition(tag) => {
+          let n = count_accent_in_inline_text(&tag);
+          let raw = "`".repeat(n + 1);
+          s.push_str(&format!(
+            "+add-footnote({raw} {footnote} {raw}) {{",
+            raw = raw,
+            footnote = tag
+          ));
+          mode = mode.push(TextMode::Inline);
+        }
         Tag::Table(alignment_list) => {
           let alignment_text: String = alignment_list
             .iter()
@@ -149,14 +173,11 @@ fn parser_to_code(
               Alignment::Center => "c;",
             })
             .collect();
-          s.push_str(&format!(
-            "+p{{\\easytable [{alignment}] {{",
-            alignment = alignment_text
-          ));
+          s.push_str(&format!("+table [{alignment}]", alignment = alignment_text));
           mode = mode.push(TextMode::Table);
         }
-        Tag::TableHead => {}
-        Tag::TableRow => s.push('\n'),
+        Tag::TableHead => s.push_str("({"),
+        Tag::TableRow => s.push('{'),
         Tag::TableCell => s.push('|'),
         Tag::Emphasis => {
           s.push_str("\\emph {");
@@ -166,9 +187,18 @@ fn parser_to_code(
           s.push_str("\\strong {");
           mode = mode.push(TextMode::Inline);
         }
-        Tag::Strikethrough => {}
+        Tag::Strikethrough => {
+          s.push_str("\\strike {");
+          mode = mode.push(TextMode::Inline);
+        }
         Tag::Link(_link_type, link, _title) => {
-          s.push_str(&format!("\\href (``` {url} ```) {{", url = link,));
+          let n = count_accent_in_inline_text(&link);
+          let raw = "`".repeat(n + 1);
+          s.push_str(&format!(
+            "\\href ({raw} {url} {raw}) {{",
+            raw = raw,
+            url = link,
+          ));
           mode = mode.push(TextMode::Inline);
         }
         Tag::Image(_link_type, link, _title) => {
@@ -177,7 +207,13 @@ fn parser_to_code(
             ch_file_path.parent().unwrap().to_str().unwrap(),
             &link
           );
-          s.push_str(&format!("\\img(``` {link} ```){{", link = path_str));
+          let n = count_accent_in_inline_text(&path_str);
+          let raw = "`".repeat(n + 1);
+          s.push_str(&format!(
+            "\\img({raw} {link} {raw}){{",
+            raw = raw,
+            link = path_str
+          ));
           mode = mode.push(TextMode::Inline);
         }
       },
@@ -208,17 +244,23 @@ fn parser_to_code(
           mode = mode.pop();
         }
         Tag::List(_) => {
-          s.push_str("}\n");
+          s.push_str("|}\n");
           mode = mode.pop();
         }
-        Tag::Item => s.push('\n'),
-        Tag::FootnoteDefinition(_) => {}
+        Tag::Item => {
+          mode = mode.pop();
+          s.push_str("}\n")
+        }
+        Tag::FootnoteDefinition(_) => {
+          mode = mode.pop();
+          s.push_str("}")
+        }
         Tag::Table(_) => {
-          s.push_str("|}}\n");
+          s.push_str("];\n");
           mode = mode.pop();
         }
-        Tag::TableHead => {}
-        Tag::TableRow => {}
+        Tag::TableHead => s.push_str("|}) ["),
+        Tag::TableRow => s.push_str("|};"),
         Tag::TableCell => {}
         Tag::Emphasis => {
           s.push('}');
@@ -228,7 +270,10 @@ fn parser_to_code(
           s.push('}');
           mode = mode.pop();
         }
-        Tag::Strikethrough => {}
+        Tag::Strikethrough => {
+          s.push('}');
+          mode = mode.pop();
+        }
         Tag::Link(_, _, _) => {
           s.push('}');
           mode = mode.pop();
@@ -244,16 +289,14 @@ fn parser_to_code(
           TextMode::Code => {
             code_str.push_str(&text);
           }
-          TextMode::Html => {
-            html_str.push_str(&text);
-          }
-          TextMode::HtmlComment => {
+          TextMode::Html | TextMode::HtmlComment => {
             html_str.push_str(&text);
           }
           _ => {
             let t = escape_inline_text(&mdbook_specific_features::parse_include_file(
               &text, file_path,
             ));
+            let t = t.trim();
             s.push_str(&t)
           }
         }
@@ -427,12 +470,18 @@ fn parser_to_code(
           }
         }
       }
-      Event::FootnoteReference(footnote) => {
-        s.push_str(&format!("\\footnote{{{footnote}}}", footnote = footnote));
+      Event::FootnoteReference(tag) => {
+        let n = count_accent_in_inline_text(&tag);
+        let raw = "`".repeat(n + 1);
+        s.push_str(&format!(
+          "\\footnote({raw} {tag} {raw});",
+          raw = raw,
+          tag = tag
+        ));
       }
-      Event::SoftBreak => {} //s.push(' '),
+      Event::SoftBreak => s.push(' '),
       Event::HardBreak => s.push('\n'),
-      Event::Rule => s.push_str("\\rule;"),
+      Event::Rule => s.push_str("+rule;\n"),
       Event::TaskListMarker(bool) => {
         s.push_str(&format!("\\task-list-marker({bool});", bool = bool));
       }

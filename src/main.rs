@@ -7,7 +7,6 @@ use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Write};
 use std::path;
 use toml::map;
-//use std::process;
 
 mod copy;
 mod md2satysfi;
@@ -117,96 +116,15 @@ fn main() {
 
   f.write_all(
     format!(
-      "@require: stdjabook
-@require: annot
-@require: itemize
-@require: code
-@require: vdecoset
-@require: easytable/easytable
+      "%@require: class-mdbook-satysfi/mdbook-satysfi
+@import: ../../../src/mdbook-satysfi
 {require_packages}
 {import_packages}
 
 
-open EasyTableAlias
-
-
-let add-fil ib = ib ++ inline-fil
-
-let-block ctx +Chapter title bt =
-  let title-ib = read-inline ctx title in
-  let title-bb = line-break true false ctx (add-fil title-ib) in
-  let main-bb = read-block ctx bt in
-  main-bb
-
-
-let-block ctx +heading n title =
-  let font-size =
-    match n with
-    | 1 -> 25pt
-    | 2 -> 20pt
-    | 3 -> 18pt
-    | _ -> 15pt
-  in
-  let ctx =
-    ctx
-    |> set-font-size font-size
-    |> set-font Kana           (`ipaexg`    , 0.88, 0.)
-    |> set-font HanIdeographic (`ipaexg`    , 0.88, 0.)
-    |> set-font Latin          (`lmsans`    , 1.0 , 0.)
-  in
-  title
-  |> read-inline ctx
-  |> add-fil
-  |> line-break true false ctx
-
-
-let-block ctx +block-quote bt =
-  let space = (20pt, 0pt, 0pt, 0pt) in
-  let deco = VDecoSet.empty in
-  block-frame-breakable ctx space deco (fun ctx -> read-block ctx bt)
-
-
-let-block ctx +Separator = block-nil
-
-
-let-block ctx +PartTitle title =
-  let font-size = 25pt in
-  let ctx =
-    ctx
-    |> set-font-size font-size
-    |> set-font Kana           (`ipaexg`    , 0.88, 0.)
-    |> set-font HanIdeographic (`ipaexg`    , 0.88, 0.)
-    |> set-font Latin          (`lmsans`    , 1.0 , 0.)
-  in
-  title
-  |> read-inline ctx
-  |> add-fil
-  |> line-break true false ctx
-
-
-let-inline ctx \\strong it =
-  let ctx =
-    ctx
-    |> set-font Kana           (`ipaexg`    , 0.88, 0.)
-    |> set-font HanIdeographic (`ipaexg`    , 0.88, 0.)
-    |> set-font Latin          (`lmsans`    , 1.0 , 0.)
-  in
-  read-inline ctx it
-
-
-let-inline ctx \\img path title =
-  let image = load-image path in
-  let insert-image = use-image-by-width image 100mm in
-  insert-image
-
-
-in
-
 document (|
   title = {{{title}}};
   author = {{{author}}};
-  show-toc = false;
-  show-title = false;
 |) '<",
       require_packages = require_packages_str,
       import_packages = import_packages_str,
@@ -221,7 +139,7 @@ document (|
     .book
     .iter()
     .for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg));
-  f.write_all(b">").unwrap();
+  f.write_all(b">\n").unwrap();
 }
 
 fn write_bookitme(
@@ -234,10 +152,13 @@ fn write_bookitme(
   match item {
     BookItem::Chapter(ch) => {
       let ch_name = ch.clone().name;
+      let parent_names = ch.clone().parent_names;
+      let depth = parent_names.len();
       f.write_all(
         format!(
-          "{indent}+Chapter{{{name}}} <\n",
+          "{indent}+Chapter ({depth}) {{{name}}} <\n",
           indent = indent_str,
+          depth = depth,
           name = md2satysfi::escape_inline_text(&ch_name)
         )
         .as_bytes(),
