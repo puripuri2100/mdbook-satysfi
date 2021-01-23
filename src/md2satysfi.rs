@@ -253,7 +253,7 @@ fn parser_to_code(
         }
         Tag::FootnoteDefinition(_) => {
           mode = mode.pop();
-          s.push_str("}")
+          s.push('}')
         }
         Tag::Table(_) => {
           s.push_str("];\n");
