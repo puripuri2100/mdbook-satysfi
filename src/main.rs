@@ -122,8 +122,8 @@ fn main() {
 
   f.write_all(
     format!(
-      "%@require: class-mdbook-satysfi/mdbook-satysfi
-@import: ../../../src/mdbook-satysfi
+      "%require: class-mdbook-satysfi/mdbook-satysfi
+%@import: ../../../src/mdbook-satysfi
 {require_packages}
 {import_packages}
 
