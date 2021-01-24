@@ -207,7 +207,7 @@ fn write_bookitme(
     BookItem::PartTitle(title) => {
       f.write_all(
         format!(
-          "{indent}+PartTitle{{{title}}};\n",
+          "{indent}+PartTitle{{{title}}}\n",
           indent = indent_str,
           title = md2satysfi::escape_inline_text(title)
         )
