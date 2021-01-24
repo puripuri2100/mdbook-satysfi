@@ -1,6 +1,3 @@
-extern crate mdbook;
-extern crate pulldown_cmark;
-
 use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
