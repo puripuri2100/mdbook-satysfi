@@ -359,6 +359,9 @@ fn make_default_config() -> map::Map<String, toml::Value> {
 fn escape_inline_text(text: &str) -> String {
   text
     .replace("\\", "\\\\")
+    .replace("&amp;", "&")
+    .replace("&lt;", "<")
+    .replace("&gt;", ">")
     .replace("{", "\\{")
     .replace("}", "\\}")
     .replace("<", "\\<")
