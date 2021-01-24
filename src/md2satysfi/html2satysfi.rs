@@ -231,10 +231,10 @@ fn node_to_satysfi_code(
 #[test]
 fn check_html_to_satysfi_code_1() {
   assert_eq!(
-    r#"+p{this is a image.\img(` ch1/../img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#
+    r#"+p{this is a image.\img(Some({test}))(` ch1/../img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#
       .to_owned(),
     html_to_satysfi_code(
-      r#"<p> this is a image. <img src="../img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
+      r#"<p> this is a image. <img alt = "test" src="../img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
       Mode::Block,
       &map::Map::new(),
       &path::PathBuf::from("ch1/hoge.md"),
@@ -245,7 +245,7 @@ fn check_html_to_satysfi_code_1() {
 #[test]
 fn check_html_to_satysfi_code_2() {
   assert_eq!(
-    r#"\p{this is a image.\img(` ch1/../img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#
+    r#"\p{this is a image.\img(None)(` ch1/../img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#
       .to_owned(),
     html_to_satysfi_code(
       r#"<p> this is a image. <img src="../img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,

@@ -46,22 +46,28 @@ fn main() {
     Some(map) => (*map).clone(),
   };
 
-  let title = &book.clone().title.unwrap_or_default();
-  let authors = &book.authors;
-  let len = authors.len();
-  let author = authors
+  let title = md2satysfi::escape_inline_text(&book.clone().title.unwrap_or_default());
+  let authors = &book.clone().authors;
+  let authors = authors
     .iter()
-    .enumerate()
-    .map(|(i, s)| {
-      if i == 0 {
-        s.to_string()
-      } else if i == len - 1 {
-        format!("and {}", s)
-      } else {
-        format!(", {}", s)
-      }
-    })
+    .map(|s| format!("{{{}}}; ", md2satysfi::escape_inline_text(s)))
     .collect::<String>();
+  let description_opt_str = match book.clone().description {
+    None => "None".to_string(),
+    Some(description) => format!("Some({{{}}})", md2satysfi::escape_inline_text(&description)),
+  };
+  let language_opt_str = match book.clone().language {
+    None => "None".to_string(),
+    Some(language) => {
+      let n = md2satysfi::count_accent_in_inline_text(&language);
+      let raw = "`".repeat(n + 1);
+      format!(
+        "Some({raw} {language} {raw})",
+        raw = raw,
+        language = language
+      )
+    }
+  };
 
   let require_packages_str = &satysfi_cfg
     .get("require-packages")
@@ -124,12 +130,16 @@ fn main() {
 
 document (|
   title = {{{title}}};
-  author = {{{author}}};
+  authors = [{authors}];
+  description = ({description_opt});
+  language = ({language_opt});
 |) '<",
       require_packages = require_packages_str,
       import_packages = import_packages_str,
       title = title,
-      author = author
+      authors = authors,
+      description_opt = description_opt_str,
+      language_opt = language_opt_str,
     )
     .as_bytes(),
   )
@@ -154,10 +164,22 @@ fn write_bookitme(
       let ch_name = ch.clone().name;
       let parent_names = ch.clone().parent_names;
       let depth = parent_names.len();
+      let numbers_opt = ch.clone().number;
+      let numbers_str = match numbers_opt {
+        None => "None".to_string(),
+        Some(numbers) => {
+          let mut s = String::new();
+          for n in numbers.iter() {
+            s.push_str(&format!("{};", n))
+          }
+          format!("Some([{}])", s)
+        }
+      };
       f.write_all(
         format!(
-          "{indent}+Chapter ({depth}) {{{name}}} <\n",
+          "{indent}+Chapter ({numbers}) ({depth}) {{{name}}} <\n",
           indent = indent_str,
+          numbers = numbers_str,
           depth = depth,
           name = md2satysfi::escape_inline_text(&ch_name)
         )
