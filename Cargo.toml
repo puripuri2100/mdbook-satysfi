@@ -4,6 +4,12 @@ edition = "2018"
 name = "mdbook-satysfi"
 version = "0.0.1-beta"
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/puripuri2100/mdbook-satysfi"
+keywords = ["book", "markdown", "satysfi", "mdbook"]
+categories = ["encoding"]
+description = "A mdbook backend for generating SATySFi documents."
+exclude = ["tests/*", ".github/*"]
 
 [dependencies]
 mdbook = "0.4.4"
