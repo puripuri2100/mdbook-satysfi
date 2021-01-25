@@ -381,7 +381,7 @@ fn check_parse_include_file_11() {
 
 fn text_type_to_string(text_type: &TextType, file_path: &path::PathBuf) -> String {
   match text_type {
-    TextType::Text(str) => format!("{}", str),
+    TextType::Text(str) => str.to_string(),
     TextType::Include(link_type) => {
       let path = file_path.parent().unwrap().join(link_type.clone().path);
       let text = fs::read_to_string(&path).unwrap();
