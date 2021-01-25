@@ -78,7 +78,9 @@ fn parse_include_file_to_text_type_list(text: &str) -> Vec<TextType> {
           }
           Some((text_type, new_pos)) => {
             pos = new_pos;
-            if !s.is_empty(){v.push(TextType::Text(s))}
+            if !s.is_empty() {
+              v.push(TextType::Text(s))
+            }
             s = String::new();
             v.push(text_type);
           }
@@ -90,7 +92,9 @@ fn parse_include_file_to_text_type_list(text: &str) -> Vec<TextType> {
       }
     }
   }
-  if !s.is_empty(){v.push(TextType::Text(s))}
+  if !s.is_empty() {
+    v.push(TextType::Text(s))
+  }
   v
 }
 
@@ -250,12 +254,10 @@ fn check_parse_include_file_1() {
 #[test]
 fn check_parse_include_file_2() {
   assert_eq!(
-    vec![
-      TextType::Include(LinkType {
-        path: path::PathBuf::from("file.rs"),
-        range: FileRange::Range(None, None),
-      }),
-    ],
+    vec![TextType::Include(LinkType {
+      path: path::PathBuf::from("file.rs"),
+      range: FileRange::Range(None, None),
+    }),],
     parse_include_file_to_text_type_list("{{#include file.rs}}")
   )
 }
@@ -263,12 +265,10 @@ fn check_parse_include_file_2() {
 #[test]
 fn check_parse_include_file_3() {
   assert_eq!(
-    vec![
-      TextType::Include(LinkType {
-        path: path::PathBuf::from("file.rs"),
-        range: FileRange::Range(Some(2), None),
-      }),
-    ],
+    vec![TextType::Include(LinkType {
+      path: path::PathBuf::from("file.rs"),
+      range: FileRange::Range(Some(2), None),
+    }),],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2}}")
   )
 }
@@ -276,12 +276,10 @@ fn check_parse_include_file_3() {
 #[test]
 fn check_parse_include_file_4() {
   assert_eq!(
-    vec![
-      TextType::Include(LinkType {
-        path: path::PathBuf::from("file.rs"),
-        range: FileRange::Range(None, Some(10)),
-      }),
-    ],
+    vec![TextType::Include(LinkType {
+      path: path::PathBuf::from("file.rs"),
+      range: FileRange::Range(None, Some(10)),
+    }),],
     parse_include_file_to_text_type_list(r"{{#include file.rs::10}}")
   )
 }
@@ -289,12 +287,10 @@ fn check_parse_include_file_4() {
 #[test]
 fn check_parse_include_file_5() {
   assert_eq!(
-    vec![
-      TextType::Include(LinkType {
-        path: path::PathBuf::from("file.rs"),
-        range: FileRange::Range(Some(2), None),
-      }),
-    ],
+    vec![TextType::Include(LinkType {
+      path: path::PathBuf::from("file.rs"),
+      range: FileRange::Range(Some(2), None),
+    }),],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2:}}")
   )
 }
@@ -302,12 +298,10 @@ fn check_parse_include_file_5() {
 #[test]
 fn check_parse_include_file_6() {
   assert_eq!(
-    vec![
-      TextType::Include(LinkType {
-        path: path::PathBuf::from("file.rs"),
-        range: FileRange::Range(Some(2), Some(10)),
-      }),
-    ],
+    vec![TextType::Include(LinkType {
+      path: path::PathBuf::from("file.rs"),
+      range: FileRange::Range(Some(2), Some(10)),
+    }),],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2:10}}")
   )
 }
@@ -335,12 +329,10 @@ fn check_parse_include_file_7() {
 #[test]
 fn check_parse_include_file_7_2() {
   assert_eq!(
-    vec![
-      TextType::Include(LinkType {
-        path: path::PathBuf::from("file.rs"),
-        range: FileRange::Name("component".to_string()),
-      }),
-    ],
+    vec![TextType::Include(LinkType {
+      path: path::PathBuf::from("file.rs"),
+      range: FileRange::Name("component".to_string()),
+    }),],
     parse_include_file_to_text_type_list(r"{{#include file.rs:component}}")
   )
 }
@@ -348,12 +340,10 @@ fn check_parse_include_file_7_2() {
 #[test]
 fn check_parse_include_file_8() {
   assert_eq!(
-    vec![
-      TextType::RustDocInclude(LinkType {
-        path: path::PathBuf::from("file.rs"),
-        range: FileRange::Range(Some(2), Some(10)),
-      }),
-    ],
+    vec![TextType::RustDocInclude(LinkType {
+      path: path::PathBuf::from("file.rs"),
+      range: FileRange::Range(Some(2), Some(10)),
+    }),],
     parse_include_file_to_text_type_list(r"{{#rustdoc_include file.rs:2:10}}")
   )
 }
@@ -361,12 +351,10 @@ fn check_parse_include_file_8() {
 #[test]
 fn check_parse_include_file_9() {
   assert_eq!(
-    vec![
-      TextType::RustDocInclude(LinkType {
-        path: path::PathBuf::from("file.rs"),
-        range: FileRange::Range(None, None),
-      }),
-    ],
+    vec![TextType::RustDocInclude(LinkType {
+      path: path::PathBuf::from("file.rs"),
+      range: FileRange::Range(None, None),
+    }),],
     parse_include_file_to_text_type_list(r"{{#rustdoc_include file.rs}}")
   )
 }
