@@ -148,7 +148,7 @@ document (|
     .book
     .iter()
     .for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg));
-  f.write_all(b">\n").unwrap();
+  f.write_all(b"\n>\n").unwrap();
 }
 
 fn write_bookitme(
@@ -176,7 +176,7 @@ fn write_bookitme(
       };
       f.write_all(
         format!(
-          "{indent}+Chapter ({numbers}) ({depth}) {{{name}}} <\n",
+          "\n\n{indent}+Chapter ({numbers}) ({depth}) {{{name}}} <",
           indent = indent_str,
           numbers = numbers_str,
           depth = depth,
@@ -196,17 +196,17 @@ fn write_bookitme(
           f.write_all(s.as_bytes()).unwrap()
         }
       };
-      f.write_all(format!("{}>\n", indent_str).as_bytes())
+      f.write_all(format!("\n{}>", indent_str).as_bytes())
         .unwrap();
     }
     BookItem::Separator => {
-      f.write_all(format!("{indent}+Separator;\n", indent = indent_str).as_bytes())
+      f.write_all(format!("\n\n{indent}+Separator;", indent = indent_str).as_bytes())
         .unwrap();
     }
     BookItem::PartTitle(title) => {
       f.write_all(
         format!(
-          "{indent}+PartTitle{{{title}}}\n",
+          "\n\n{indent}+PartTitle{{{title}}}",
           indent = indent_str,
           title = md2satysfi::html2satysfi::escape_inline_text(title)
         )

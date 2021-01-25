@@ -20,7 +20,7 @@ pub fn html_to_satysfi_code(
   let node_lst = Dom::parse(html_code).unwrap().children;
   node_lst
     .iter()
-    .map(|node| node_to_satysfi_code(node, mode, file_path, html_cfg, ch_file_path))
+    .map(|node| node_to_satysfi_code(node, mode, file_path, html_cfg, ch_file_path, 2))
     .collect()
 }
 
@@ -30,6 +30,7 @@ fn node_to_satysfi_code(
   file_path: &path::PathBuf,
   html_cfg: &map::Map<String, toml::Value>,
   ch_file_path: &path::PathBuf,
+  indent: usize,
 ) -> String {
   match node {
     Node::Comment(_) => String::new(),
@@ -87,27 +88,52 @@ fn node_to_satysfi_code(
                 let children_str = children
                   .iter()
                   .map(|node| match mode {
-                    Mode::Code => {
-                      node_to_satysfi_code(node, Mode::Code, file_path, html_cfg, ch_file_path)
-                    }
-                    _ => node_to_satysfi_code(node, Mode::Block, file_path, html_cfg, ch_file_path),
+                    Mode::Code => node_to_satysfi_code(
+                      node,
+                      Mode::Code,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    ),
+                    _ => node_to_satysfi_code(
+                      node,
+                      Mode::Block,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    ),
                   })
                   .collect::<String>();
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("<{}>", children_str),
+                  _ => {
+                    let indent_str = "  ".repeat(indent);
+                    format!("<{}\n{}>", children_str, indent_str)
+                  }
                 }
               }
               ChildrenType::InlineText => {
                 let children_str = children
                   .iter()
                   .map(|node| match mode {
-                    Mode::Code => {
-                      node_to_satysfi_code(node, Mode::Code, file_path, html_cfg, ch_file_path)
-                    }
-                    _ => {
-                      node_to_satysfi_code(node, Mode::Inline, file_path, html_cfg, ch_file_path)
-                    }
+                    Mode::Code => node_to_satysfi_code(
+                      node,
+                      Mode::Code,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    ),
+                    _ => node_to_satysfi_code(
+                      node,
+                      Mode::Inline,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    ),
                   })
                   .collect::<String>();
                 match mode {
@@ -119,7 +145,14 @@ fn node_to_satysfi_code(
                 let children_str = children
                   .iter()
                   .map(|node| {
-                    node_to_satysfi_code(node, Mode::Code, file_path, html_cfg, ch_file_path)
+                    node_to_satysfi_code(
+                      node,
+                      Mode::Code,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    )
                   })
                   .collect::<String>();
                 match mode {
@@ -134,7 +167,14 @@ fn node_to_satysfi_code(
                 let children_str = children
                   .iter()
                   .map(|node| {
-                    node_to_satysfi_code(node, Mode::Code, file_path, html_cfg, ch_file_path)
+                    node_to_satysfi_code(
+                      node,
+                      Mode::Code,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    )
                   })
                   .collect::<String>();
                 match mode {
@@ -147,34 +187,66 @@ fn node_to_satysfi_code(
               }
               ChildrenType::BlockList => {
                 let children_iter = children.iter().map(|node| match mode {
-                  Mode::Code => {
-                    node_to_satysfi_code(node, Mode::Code, file_path, html_cfg, ch_file_path)
-                  }
-                  _ => node_to_satysfi_code(node, Mode::Block, file_path, html_cfg, ch_file_path),
+                  Mode::Code => node_to_satysfi_code(
+                    node,
+                    Mode::Code,
+                    file_path,
+                    html_cfg,
+                    ch_file_path,
+                    indent + 1,
+                  ),
+                  _ => node_to_satysfi_code(
+                    node,
+                    Mode::Block,
+                    file_path,
+                    html_cfg,
+                    ch_file_path,
+                    indent + 1,
+                  ),
                 });
+                let indent_str = "  ".repeat(indent + 1);
                 let mut children_str = String::new();
                 for children_value in children_iter {
-                  children_str.push_str(&format!("('<{}>);", children_value))
+                  children_str.push_str(&format!("\n{}('<{}>);", indent_str, children_value))
                 }
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("[{}];", children_str),
+                  _ => {
+                    let indent_str = "  ".repeat(indent);
+                    format!("[{}\n{}];", children_str, indent_str)
+                  }
                 }
               }
               ChildrenType::InlineList => {
                 let children_iter = children.iter().map(|node| match mode {
-                  Mode::Code => {
-                    node_to_satysfi_code(node, Mode::Code, file_path, html_cfg, ch_file_path)
-                  }
-                  _ => node_to_satysfi_code(node, Mode::Inline, file_path, html_cfg, ch_file_path),
+                  Mode::Code => node_to_satysfi_code(
+                    node,
+                    Mode::Code,
+                    file_path,
+                    html_cfg,
+                    ch_file_path,
+                    indent + 1,
+                  ),
+                  _ => node_to_satysfi_code(
+                    node,
+                    Mode::Inline,
+                    file_path,
+                    html_cfg,
+                    ch_file_path,
+                    indent + 1,
+                  ),
                 });
+                let indent_str = "  ".repeat(indent + 1);
                 let mut children_str = String::new();
                 for children_value in children_iter {
-                  children_str.push_str(&format!("({{{}}});", children_value))
+                  children_str.push_str(&format!("\n{}({{{}}});", indent_str, children_value))
                 }
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("[{}];", children_str),
+                  _ => {
+                    let indent_str = "  ".repeat(indent);
+                    format!("[{}\n{}];", children_str, indent_str)
+                  }
                 }
               }
             },
@@ -277,8 +349,10 @@ fn node_to_satysfi_code(
             .collect::<String>();
           match mode {
             Mode::Block => {
+              let indent_str = "  ".repeat(indent);
               format!(
-                "+{command_name}{attributes_str}{children_str}",
+                "\n{indent}+{command_name}{attributes_str}{children_str}",
+                indent = indent_str,
                 command_name = command_name,
                 attributes_str = attributes_str,
                 children_str = children_str
@@ -314,7 +388,7 @@ fn node_to_satysfi_code(
 #[test]
 fn check_html_to_satysfi_code_1() {
   assert_eq!(
-    r#"+p{this is a image.\code(`` let p = `<p>x</p>` ``);}"#.to_owned(),
+    "\n    +p{this is a image.\\code(`` let p = `<p>x</p>` ``);}".to_owned(),
     html_to_satysfi_code(
       r#"<p> this is a image. <code>let p = `<p>x</p>`</code></p>"#,
       Mode::Block,

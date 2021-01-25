@@ -12,7 +12,7 @@ description = "A mdbook backend for generating SATySFi documents."
 exclude = ["tests/*", ".github/*"]
 
 [dependencies]
-mdbook = "0.4.4"
+mdbook = "0.4.6"
 pulldown-cmark = "0.8.0"
 regex = "1.4.2"
 html_parser = "0.6.2"
