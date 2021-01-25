@@ -40,89 +40,203 @@ pub fn parse_include_file(text: &str, file_path: &path::PathBuf) -> String {
 }
 
 fn parse_include_file_to_text_type_list(text: &str) -> Vec<TextType> {
-  let text_bits = text.as_bytes().to_vec();
-  let re = Regex::new(
-    r"\{\{#(?P<field_name_1>[a-zA-Z_-]+)\s+(?P<file_name_1>[^:\s]+)\}\}|\{\{#(?P<field_name_2>[a-zA-Z_-]+)\s+(?P<file_name_2>[^:\s]+):(?P<start_opt>[0-9]*):(?P<end_opt>[0-9]*)\}\}|\{\{#(?P<field_name_3>[a-zA-Z_-]+)\s+(?P<file_name_3>[^:\s]+):(?P<range_name>[\w_-]+)\}\}").unwrap();
-  let match_range_list: Vec<(usize, usize)> = re
-    .find_iter(text)
-    .map(|mat| (mat.start(), mat.end()))
-    .collect();
+  let chars = text.chars().collect::<Vec<_>>();
+  let mut s = String::new();
   let mut v = Vec::new();
   let mut pos = 0;
-  for (start, end) in match_range_list.iter() {
-    let mut text_v = Vec::new();
-    for t in text_bits.iter().take(*start).skip(pos) {
-      text_v.push(*t)
-    }
-    let text = String::from_utf8(text_v).unwrap();
-    if pos != *start {
-      v.push(TextType::Text(text))
-    };
-    pos = end + 1;
-    let mut match_v = Vec::new();
-    for t in text_bits.iter().take(*end).skip(*start) {
-      match_v.push(*t)
-    }
-    let text = String::from_utf8(match_v).unwrap();
-    let caps = re.captures(&text).unwrap();
-    match (
-      caps.name("field_name_1"),
-      caps.name("field_name_2"),
-      caps.name("field_name_3"),
-    ) {
-      (Some(field_name), _, _) => {
-        let file_name = caps.name("file_name_1").unwrap().as_str();
-        let path = path::PathBuf::from(file_name);
-        let range = FileRange::Range(None, None);
-        match field_name.as_str() {
-          "include" | "playground" => v.push(TextType::Include(LinkType { path, range })),
-          "rustdoc_include" => v.push(TextType::RustDocInclude(LinkType { path, range })),
-          _ => v.push(TextType::Text(text.to_string())),
+  while pos < chars.len() {
+    match chars[pos] {
+      '\\' => match chars.get(pos + 1) {
+        None => {
+          s.push('\\');
+          break;
+        }
+        Some('{') => {
+          pos += 1;
+          let opt = parse_text_type_opt(&chars, pos);
+          match opt {
+            None => {
+              s.push('{');
+              pos += 1;
+            }
+            Some((_, new_pos)) => {
+              let str = chars.iter().take(new_pos).skip(pos).collect::<String>();
+              pos = new_pos;
+              s.push('\\');
+              s.push_str(&str)
+            }
+          }
+        }
+        Some(_) => {}
+      },
+      '{' => {
+        let opt = parse_text_type_opt(&chars, pos);
+        match opt {
+          None => {
+            s.push('{');
+            pos += 1;
+          }
+          Some((text_type, new_pos)) => {
+            pos = new_pos;
+            v.push(TextType::Text(s));
+            s = String::new();
+            v.push(text_type);
+          }
         }
       }
-      (_, Some(field_name), _) => {
-        let file_name = caps.name("file_name_2").unwrap().as_str();
-        let path = path::PathBuf::from(file_name);
-        let start_opt = caps
-          .name("start_opt")
-          .map(|s| s.as_str().parse().ok())
-          .flatten();
-        let end_opt = caps
-          .name("end_opt")
-          .map(|s| s.as_str().parse().ok())
-          .flatten();
-        let range = FileRange::Range(start_opt, end_opt);
-        match field_name.as_str() {
-          "include" | "playground" => v.push(TextType::Include(LinkType { path, range })),
-          "rustdoc_include" => v.push(TextType::RustDocInclude(LinkType { path, range })),
-          _ => v.push(TextType::Text(text.to_string())),
-        }
+      c => {
+        pos += 1;
+        s.push(c)
       }
-      (_, _, Some(field_name)) => {
-        let file_name = caps.name("file_name_3").unwrap().as_str();
-        let path = path::PathBuf::from(file_name);
-        let range = match caps.name("range_name").unwrap().as_str().parse::<usize>() {
-          Ok(u) => FileRange::Range(Some(u), None),
-          Err(_) => FileRange::Name(caps.name("range_name").unwrap().as_str().to_string()),
-        };
-        match field_name.as_str() {
-          "include" | "playground" => v.push(TextType::Include(LinkType { path, range })),
-          "rustdoc_include" => v.push(TextType::RustDocInclude(LinkType { path, range })),
-          _ => v.push(TextType::Text(text.to_string())),
-        }
-      }
-      _ => unimplemented!(),
     }
   }
-  if pos < text_bits.len() {
-    let mut text_v = Vec::new();
-    for t in text_bits.iter().skip(pos) {
-      text_v.push(*t)
-    }
-    let text = String::from_utf8(text_v).unwrap();
-    v.push(TextType::Text(text));
-  }
+  v.push(TextType::Text(s));
   v
+}
+
+#[allow(unused_assignments)]
+fn parse_text_type_opt(chars: &[char], pos: usize) -> Option<(TextType, usize)> {
+  let mut pos = pos;
+  let mut kind = String::new();
+  let mut file_name = String::new();
+  let mut range_opt = None;
+  // parse
+  pos += 1;
+  match chars.get(pos) {
+    Some('{') => pos += 1,
+    _ => return None,
+  }
+  match chars.get(pos) {
+    Some('#') => pos += 1,
+    _ => return None,
+  }
+  while pos < chars.len() {
+    if chars[pos].is_ascii_alphabetic() || chars[pos] == '_' {
+      kind.push(chars[pos]);
+      pos += 1;
+    } else {
+      break;
+    }
+  }
+  while pos < chars.len() {
+    if chars[pos].is_ascii_whitespace() {
+      pos += 1
+    } else {
+      break;
+    }
+  }
+  while pos < chars.len() {
+    if chars[pos] != ':' && chars[pos] != '}' {
+      file_name.push(chars[pos]);
+      pos += 1;
+    } else {
+      break;
+    }
+  }
+  match chars.get(pos) {
+    Some(':') => pos += 1,
+    Some('}') => {
+      pos += 1;
+      match chars.get(pos) {
+        Some('}') => pos += 1,
+        _ => return None,
+      }
+      range_opt = Some(FileRange::Range(None, None));
+      match (kind.as_str(), range_opt) {
+        ("include", Some(range)) | ("playground", Some(range)) => {
+          let path = path::PathBuf::from(file_name);
+          return Some((TextType::Include(LinkType { path, range }), pos));
+        }
+        ("rustdoc_include", Some(range)) => {
+          let path = path::PathBuf::from(file_name);
+          return Some((TextType::RustDocInclude(LinkType { path, range }), pos));
+        }
+        _ => return None,
+      }
+    }
+    _ => return None,
+  }
+  match chars.get(pos) {
+    Some(':') => {
+      pos += 1;
+      let (end_range, new_pos) = parse_digit_range(chars, pos)?;
+      pos = new_pos;
+      range_opt = Some(FileRange::Range(None, Some(end_range)))
+    }
+    Some(c) if c.is_ascii_digit() => {
+      let (start_range, new_pos) = parse_digit_range(chars, pos)?;
+      pos = new_pos;
+      match chars.get(pos) {
+        Some(':') => pos += 1,
+        Some('}') => range_opt = Some(FileRange::Range(Some(start_range), None)),
+        _ => return None,
+      }
+      let end_range_opt = parse_digit_range(chars, pos);
+      match end_range_opt {
+        None => range_opt = Some(FileRange::Range(Some(start_range), None)),
+        Some((end_range, new_pos)) => {
+          pos = new_pos;
+          range_opt = Some(FileRange::Range(Some(start_range), Some(end_range)))
+        }
+      }
+    }
+    Some(c) if c.is_ascii_alphabetic() || *c == '_' || *c == '-' => {
+      let (range_name, new_pos) = parse_digit_name(chars, pos)?;
+      pos = new_pos;
+      range_opt = Some(FileRange::Name(range_name))
+    }
+    _ => return None,
+  }
+  match chars.get(pos) {
+    Some('}') => pos += 1,
+    _ => return None,
+  }
+  match chars.get(pos) {
+    Some('}') => pos += 1,
+    _ => return None,
+  }
+  // return value
+  match (kind.as_str(), range_opt) {
+    ("include", Some(range)) | ("playground", Some(range)) => {
+      let path = path::PathBuf::from(file_name);
+      Some((TextType::Include(LinkType { path, range }), pos))
+    }
+    ("rustdoc_include", Some(range)) => {
+      let path = path::PathBuf::from(file_name);
+      Some((TextType::RustDocInclude(LinkType { path, range }), pos))
+    }
+    _ => None,
+  }
+}
+
+fn parse_digit_range(chars: &[char], pos: usize) -> Option<(usize, usize)> {
+  let mut pos = pos;
+  let mut u_str = String::new();
+  while pos < chars.len() {
+    if chars[pos].is_ascii_digit() {
+      u_str.push(chars[pos]);
+      pos += 1;
+    } else {
+      break;
+    }
+  }
+  let u = u_str.parse().ok()?;
+  Some((u, pos))
+}
+
+fn parse_digit_name(chars: &[char], pos: usize) -> Option<(String, usize)> {
+  let mut pos = pos;
+  let mut str = String::new();
+  while pos < chars.len() {
+    let c = chars[pos];
+    if (c.is_ascii_alphabetic() || c == '_' || c == '-') && c != '}' {
+      str.push(chars[pos]);
+      pos += 1;
+    } else {
+      break;
+    }
+  }
+  Some((str, pos))
 }
 
 #[test]
@@ -136,10 +250,14 @@ fn check_parse_include_file_1() {
 #[test]
 fn check_parse_include_file_2() {
   assert_eq!(
-    vec![TextType::Include(LinkType {
-      path: path::PathBuf::from("file.rs"),
-      range: FileRange::Range(None, None),
-    })],
+    vec![
+      TextType::Text(String::new()),
+      TextType::Include(LinkType {
+        path: path::PathBuf::from("file.rs"),
+        range: FileRange::Range(None, None),
+      }),
+      TextType::Text(String::new()),
+    ],
     parse_include_file_to_text_type_list("{{#include file.rs}}")
   )
 }
@@ -147,10 +265,14 @@ fn check_parse_include_file_2() {
 #[test]
 fn check_parse_include_file_3() {
   assert_eq!(
-    vec![TextType::Include(LinkType {
-      path: path::PathBuf::from("file.rs"),
-      range: FileRange::Range(Some(2), None),
-    }),],
+    vec![
+      TextType::Text(String::new()),
+      TextType::Include(LinkType {
+        path: path::PathBuf::from("file.rs"),
+        range: FileRange::Range(Some(2), None),
+      }),
+      TextType::Text(String::new()),
+    ],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2}}")
   )
 }
@@ -158,10 +280,14 @@ fn check_parse_include_file_3() {
 #[test]
 fn check_parse_include_file_4() {
   assert_eq!(
-    vec![TextType::Include(LinkType {
-      path: path::PathBuf::from("file.rs"),
-      range: FileRange::Range(None, Some(10)),
-    }),],
+    vec![
+      TextType::Text(String::new()),
+      TextType::Include(LinkType {
+        path: path::PathBuf::from("file.rs"),
+        range: FileRange::Range(None, Some(10)),
+      }),
+      TextType::Text(String::new()),
+    ],
     parse_include_file_to_text_type_list(r"{{#include file.rs::10}}")
   )
 }
@@ -169,10 +295,14 @@ fn check_parse_include_file_4() {
 #[test]
 fn check_parse_include_file_5() {
   assert_eq!(
-    vec![TextType::Include(LinkType {
-      path: path::PathBuf::from("file.rs"),
-      range: FileRange::Range(Some(2), None),
-    }),],
+    vec![
+      TextType::Text(String::new()),
+      TextType::Include(LinkType {
+        path: path::PathBuf::from("file.rs"),
+        range: FileRange::Range(Some(2), None),
+      }),
+      TextType::Text(String::new()),
+    ],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2:}}")
   )
 }
@@ -180,10 +310,14 @@ fn check_parse_include_file_5() {
 #[test]
 fn check_parse_include_file_6() {
   assert_eq!(
-    vec![TextType::Include(LinkType {
-      path: path::PathBuf::from("file.rs"),
-      range: FileRange::Range(Some(2), Some(10)),
-    }),],
+    vec![
+      TextType::Text(String::new()),
+      TextType::Include(LinkType {
+        path: path::PathBuf::from("file.rs"),
+        range: FileRange::Range(Some(2), Some(10)),
+      }),
+      TextType::Text(String::new()),
+    ],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2:10}}")
   )
 }
@@ -197,7 +331,7 @@ fn check_parse_include_file_7() {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Name("component".to_string()),
       }),
-      TextType::Text("```".to_string()),
+      TextType::Text("\n```".to_string()),
     ],
     parse_include_file_to_text_type_list(
       r"Here is a component:
@@ -209,12 +343,31 @@ fn check_parse_include_file_7() {
 }
 
 #[test]
+fn check_parse_include_file_7_2() {
+  assert_eq!(
+    vec![
+      TextType::Text(String::new()),
+      TextType::Include(LinkType {
+        path: path::PathBuf::from("file.rs"),
+        range: FileRange::Name("component".to_string()),
+      }),
+      TextType::Text(String::new()),
+    ],
+    parse_include_file_to_text_type_list(r"{{#include file.rs:component}}")
+  )
+}
+
+#[test]
 fn check_parse_include_file_8() {
   assert_eq!(
-    vec![TextType::RustDocInclude(LinkType {
-      path: path::PathBuf::from("file.rs"),
-      range: FileRange::Range(Some(2), Some(10)),
-    }),],
+    vec![
+      TextType::Text(String::new()),
+      TextType::RustDocInclude(LinkType {
+        path: path::PathBuf::from("file.rs"),
+        range: FileRange::Range(Some(2), Some(10)),
+      }),
+      TextType::Text(String::new()),
+    ],
     parse_include_file_to_text_type_list(r"{{#rustdoc_include file.rs:2:10}}")
   )
 }
@@ -222,10 +375,14 @@ fn check_parse_include_file_8() {
 #[test]
 fn check_parse_include_file_9() {
   assert_eq!(
-    vec![TextType::RustDocInclude(LinkType {
-      path: path::PathBuf::from("file.rs"),
-      range: FileRange::Range(None, None),
-    }),],
+    vec![
+      TextType::Text(String::new()),
+      TextType::RustDocInclude(LinkType {
+        path: path::PathBuf::from("file.rs"),
+        range: FileRange::Range(None, None),
+      }),
+      TextType::Text(String::new()),
+    ],
     parse_include_file_to_text_type_list(r"{{#rustdoc_include file.rs}}")
   )
 }
@@ -239,6 +396,14 @@ r"Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
 It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
 It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.")
+  )
+}
+
+#[test]
+fn check_parse_include_file_11() {
+  assert_eq!(
+    vec![TextType::Text("\\{{#include file.rs}}".to_string())],
+    parse_include_file_to_text_type_list("\\{{#include file.rs}}")
   )
 }
 
