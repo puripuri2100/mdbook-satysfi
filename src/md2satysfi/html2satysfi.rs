@@ -522,22 +522,22 @@ const DEFAULT_HTML_CONFIG: &str = r#"
   command_name="item"
   children_type="inline"
 [h1]
-  command_name="heading (1) "
+  command_name="heading(1)"
   children_type="inline"
 [h2]
-  command_name="heading (2) "
+  command_name="heading(2)"
   children_type="inline"
 [h3]
-  command_name="heading (3) "
+  command_name="heading(3)"
   children_type="inline"
 [h4]
-  command_name="heading (4) "
+  command_name="heading(4)"
   children_type="inline"
 [h5]
-  command_name="heading (5) "
+  command_name="heading(5)"
   children_type="inline"
 [h6]
-  command_name="heading (6) "
+  command_name="heading(6)"
   children_type="inline"
 [code-block]
   command_name="code-block"
