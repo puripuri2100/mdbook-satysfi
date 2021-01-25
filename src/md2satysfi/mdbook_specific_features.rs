@@ -78,7 +78,7 @@ fn parse_include_file_to_text_type_list(text: &str) -> Vec<TextType> {
           }
           Some((text_type, new_pos)) => {
             pos = new_pos;
-            v.push(TextType::Text(s));
+            if !s.is_empty(){v.push(TextType::Text(s))}
             s = String::new();
             v.push(text_type);
           }
@@ -90,7 +90,7 @@ fn parse_include_file_to_text_type_list(text: &str) -> Vec<TextType> {
       }
     }
   }
-  v.push(TextType::Text(s));
+  if !s.is_empty(){v.push(TextType::Text(s))}
   v
 }
 
@@ -251,12 +251,10 @@ fn check_parse_include_file_1() {
 fn check_parse_include_file_2() {
   assert_eq!(
     vec![
-      TextType::Text(String::new()),
       TextType::Include(LinkType {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Range(None, None),
       }),
-      TextType::Text(String::new()),
     ],
     parse_include_file_to_text_type_list("{{#include file.rs}}")
   )
@@ -266,12 +264,10 @@ fn check_parse_include_file_2() {
 fn check_parse_include_file_3() {
   assert_eq!(
     vec![
-      TextType::Text(String::new()),
       TextType::Include(LinkType {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Range(Some(2), None),
       }),
-      TextType::Text(String::new()),
     ],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2}}")
   )
@@ -281,12 +277,10 @@ fn check_parse_include_file_3() {
 fn check_parse_include_file_4() {
   assert_eq!(
     vec![
-      TextType::Text(String::new()),
       TextType::Include(LinkType {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Range(None, Some(10)),
       }),
-      TextType::Text(String::new()),
     ],
     parse_include_file_to_text_type_list(r"{{#include file.rs::10}}")
   )
@@ -296,12 +290,10 @@ fn check_parse_include_file_4() {
 fn check_parse_include_file_5() {
   assert_eq!(
     vec![
-      TextType::Text(String::new()),
       TextType::Include(LinkType {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Range(Some(2), None),
       }),
-      TextType::Text(String::new()),
     ],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2:}}")
   )
@@ -311,12 +303,10 @@ fn check_parse_include_file_5() {
 fn check_parse_include_file_6() {
   assert_eq!(
     vec![
-      TextType::Text(String::new()),
       TextType::Include(LinkType {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Range(Some(2), Some(10)),
       }),
-      TextType::Text(String::new()),
     ],
     parse_include_file_to_text_type_list(r"{{#include file.rs:2:10}}")
   )
@@ -346,12 +336,10 @@ fn check_parse_include_file_7() {
 fn check_parse_include_file_7_2() {
   assert_eq!(
     vec![
-      TextType::Text(String::new()),
       TextType::Include(LinkType {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Name("component".to_string()),
       }),
-      TextType::Text(String::new()),
     ],
     parse_include_file_to_text_type_list(r"{{#include file.rs:component}}")
   )
@@ -361,12 +349,10 @@ fn check_parse_include_file_7_2() {
 fn check_parse_include_file_8() {
   assert_eq!(
     vec![
-      TextType::Text(String::new()),
       TextType::RustDocInclude(LinkType {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Range(Some(2), Some(10)),
       }),
-      TextType::Text(String::new()),
     ],
     parse_include_file_to_text_type_list(r"{{#rustdoc_include file.rs:2:10}}")
   )
@@ -376,12 +362,10 @@ fn check_parse_include_file_8() {
 fn check_parse_include_file_9() {
   assert_eq!(
     vec![
-      TextType::Text(String::new()),
       TextType::RustDocInclude(LinkType {
         path: path::PathBuf::from("file.rs"),
         range: FileRange::Range(None, None),
       }),
-      TextType::Text(String::new()),
     ],
     parse_include_file_to_text_type_list(r"{{#rustdoc_include file.rs}}")
   )
@@ -409,7 +393,7 @@ fn check_parse_include_file_11() {
 
 fn text_type_to_string(text_type: &TextType, file_path: &path::PathBuf) -> String {
   match text_type {
-    TextType::Text(str) => format!("{}\n", str),
+    TextType::Text(str) => format!("{}", str),
     TextType::Include(link_type) => {
       let path = file_path.parent().unwrap().join(link_type.clone().path);
       let text = fs::read_to_string(&path).unwrap();
