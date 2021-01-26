@@ -67,7 +67,7 @@ fn parse_include_file_to_text_type_list(text: &str) -> Vec<TextType> {
             }
           }
         }
-        Some(_) => {}
+        Some(_) => pos += 1,
       },
       '{' => {
         let opt = parse_text_type_opt(&chars, pos);
@@ -376,6 +376,14 @@ fn check_parse_include_file_11() {
   assert_eq!(
     vec![TextType::Text("\\{{#include file.rs}}".to_string())],
     parse_include_file_to_text_type_list("\\{{#include file.rs}}")
+  )
+}
+
+#[test]
+fn check_parse_include_file_12() {
+  assert_eq!(
+    vec![TextType::Text("\\{{#include file.rs}}".to_string())],
+    parse_include_file_to_text_type_list("\\hoge")
   )
 }
 

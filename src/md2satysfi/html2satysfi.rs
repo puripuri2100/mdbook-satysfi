@@ -44,7 +44,7 @@ fn node_to_satysfi_code(
           str, file_path
         ))
       ),
-      Mode::Code => str.to_string(),
+      Mode::Code => escape_code(str),
     },
     Node::Element(element) => {
       let tag_name =
@@ -138,7 +138,7 @@ fn node_to_satysfi_code(
                   .collect::<String>();
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("{{{}}}", &escape_code(&children_str)),
+                  _ => format!("{{{}}}", escape_inline_text(&children_str)),
                 }
               }
               ChildrenType::BlockCode => {
@@ -624,6 +624,7 @@ pub fn escape_code(text: &str) -> String {
     .replace("&amp;", "&")
     .replace("&lt;", "<")
     .replace("&gt;", ">")
+    .replace("&quot;", "\"")
 }
 
 pub fn escape_inline_text(text: &str) -> String {
