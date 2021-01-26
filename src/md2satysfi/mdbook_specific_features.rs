@@ -51,32 +51,19 @@ fn parse_include_file_to_text_type_list(text: &str) -> Vec<TextType> {
           s.push('\\');
           break;
         }
-        Some('\\') => {
+        Some('{') => {
           pos += 1;
-          match chars.get(pos + 1) {
+          let opt = parse_text_type_opt(&chars, pos);
+          match opt {
             None => {
-              s.push('\\');
-              break;
-            }
-            Some('{') => {
+              s.push('{');
               pos += 1;
-              let opt = parse_text_type_opt(&chars, pos);
-              match opt {
-                None => {
-                  s.push('\\');
-                  pos += 1;
-                }
-                Some((_, new_pos)) => {
-                  let str = chars.iter().take(new_pos).skip(pos).collect::<String>();
-                  pos = new_pos;
-                  s.push('\\');
-                  s.push_str(&str)
-                }
-              }
             }
-            Some(_) => {
+            Some((_, new_pos)) => {
+              let str = chars.iter().take(new_pos).skip(pos).collect::<String>();
+              pos = new_pos;
               s.push('\\');
-              pos += 1
+              s.push_str(&str)
             }
           }
         }
@@ -391,7 +378,7 @@ It was popularised in the 1960s with the release of Letraset sheets containing L
 fn check_parse_include_file_11() {
   assert_eq!(
     vec![TextType::Text("\\{{#include file.rs}}".to_string())],
-    parse_include_file_to_text_type_list("\\\\{{#include file.rs}}")
+    parse_include_file_to_text_type_list("\\{{#include file.rs}}")
   )
 }
 
@@ -406,10 +393,10 @@ fn check_parse_include_file_11_2() {
         .to_string()
     )],
     parse_include_file_to_text_type_list(
-      r#"\\{{#include file1.rs:2}}
-\\{{#include file2.rs::10}}
-\\{{#include file3.rs:2:}}
-\\{{#include file4.rs:2:10}}"#
+      r#"\{{#include file1.rs:2}}
+\{{#include file2.rs::10}}
+\{{#include file3.rs:2:}}
+\{{#include file4.rs:2:10}}"#
     )
   )
 }
@@ -425,7 +412,7 @@ fn check_parse_include_file_11_3() {
     )],
     parse_include_file_to_text_type_list(
       r#"```
-\\{{#include file.rs}}
+\{{#include file.rs}}
 ```"#
     )
   )
@@ -435,7 +422,7 @@ fn check_parse_include_file_11_3() {
 fn check_parse_include_file_12() {
   assert_eq!(
     vec![TextType::Text("\\hoge".to_string())],
-    parse_include_file_to_text_type_list("\\\\hoge")
+    parse_include_file_to_text_type_list("\\hoge")
   )
 }
 
@@ -444,7 +431,6 @@ fn text_type_to_string(text_type: &TextType, file_path: &path::PathBuf) -> Strin
     TextType::Text(str) => str.to_string(),
     TextType::Include(link_type) => {
       let path = file_path.parent().unwrap().join(link_type.clone().path);
-      println!("paht: {:?}", path);
       let text = fs::read_to_string(&path).unwrap();
       let text_lines_len = text.lines().count();
       let text_lines = text.lines();

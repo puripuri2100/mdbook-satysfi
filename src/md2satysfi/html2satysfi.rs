@@ -432,7 +432,7 @@ fn check_html_to_satysfi_code_4() {
   assert_eq!(
     "\n    +code-block(`\n\\{{#include file.rs}}\n`);".to_string(),
     html_to_satysfi_code(
-      r#"<div class="code-block">\\{{#include file.rs}}</div>"#,
+      r#"<div class="code-block">\{{#include file.rs}}</div>"#,
       Mode::Block,
       &path::PathBuf::from("ch1/hoge.md"),
       &map::Map::new(),
