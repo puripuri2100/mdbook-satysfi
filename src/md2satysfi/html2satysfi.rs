@@ -547,7 +547,7 @@ const DEFAULT_HTML_CONFIG: &str = r#"
   children_type="inline"
   [[a.attribute]]
   "name" = "href"
-  "type" = "link"
+  "type" = "string"
 [task-list-marker]
   command_name="task-list-marker"
   [[task-list-marker.attribute]]
