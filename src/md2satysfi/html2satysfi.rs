@@ -138,7 +138,7 @@ fn node_to_satysfi_code(
                   .collect::<String>();
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("{{{}}}", escape_inline_text(&children_str)),
+                  _ => format!("{{{}}}", children_str),
                 }
               }
               ChildrenType::BlockCode => {
