@@ -44,7 +44,7 @@ fn node_to_satysfi_code(
           str, file_path
         ))
       ),
-      Mode::Code => escape_code(str),
+      Mode::Code => str.to_string(),
     },
     Node::Element(element) => {
       let tag_name =
@@ -420,6 +420,20 @@ fn check_html_to_satysfi_code_3() {
     html_to_satysfi_code(
       r#"<ruby>如何<rp>(</rp><rt>いか</rt><rp>)</rp></ruby>"#,
       Mode::Inline,
+      &path::PathBuf::from("ch1/hoge.md"),
+      &map::Map::new(),
+      &path::PathBuf::from("ch1/hoge.md")
+    )
+  )
+}
+
+#[test]
+fn check_html_to_satysfi_code_4() {
+  assert_eq!(
+    "\n    +code-block(`\n\\{{#include file.rs}}\n`);".to_string(),
+    html_to_satysfi_code(
+      r#"<div class="code-block">\\{{#include file.rs}}</div>"#,
+      Mode::Block,
       &path::PathBuf::from("ch1/hoge.md"),
       &map::Map::new(),
       &path::PathBuf::from("ch1/hoge.md")
