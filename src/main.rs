@@ -43,20 +43,23 @@ fn main() {
     Some(map) => (*map).clone(),
   };
 
-  let title = md2satysfi::escape_inline_text(&book.clone().title.unwrap_or_default());
+  let title = md2satysfi::html2satysfi::escape_inline_text(&book.clone().title.unwrap_or_default());
   let authors = &book.clone().authors;
   let authors = authors
     .iter()
-    .map(|s| format!("{{{}}}; ", md2satysfi::escape_inline_text(s)))
+    .map(|s| format!("{{{}}}; ", md2satysfi::html2satysfi::escape_inline_text(s)))
     .collect::<String>();
   let description_opt_str = match book.clone().description {
     None => "None".to_string(),
-    Some(description) => format!("Some({{{}}})", md2satysfi::escape_inline_text(&description)),
+    Some(description) => format!(
+      "Some({{{}}})",
+      md2satysfi::html2satysfi::escape_inline_text(&description)
+    ),
   };
   let language_opt_str = match book.clone().language {
     None => "None".to_string(),
     Some(language) => {
-      let n = md2satysfi::count_accent_in_inline_text(&language);
+      let n = md2satysfi::html2satysfi::count_accent_in_inline_text(&language);
       let raw = "`".repeat(n + 1);
       format!(
         "Some({raw} {language} {raw})",
@@ -145,7 +148,7 @@ document (|
     .book
     .iter()
     .for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg));
-  f.write_all(b">\n").unwrap();
+  f.write_all(b"\n>\n").unwrap();
 }
 
 fn write_bookitme(
@@ -173,11 +176,11 @@ fn write_bookitme(
       };
       f.write_all(
         format!(
-          "{indent}+Chapter ({numbers}) ({depth}) {{{name}}} <\n",
+          "\n\n{indent}+Chapter ({numbers}) ({depth}) {{{name}}} <",
           indent = indent_str,
           numbers = numbers_str,
           depth = depth,
-          name = md2satysfi::escape_inline_text(&ch_name)
+          name = md2satysfi::html2satysfi::escape_inline_text(&ch_name)
         )
         .as_bytes(),
       )
@@ -193,19 +196,19 @@ fn write_bookitme(
           f.write_all(s.as_bytes()).unwrap()
         }
       };
-      f.write_all(format!("{}>\n", indent_str).as_bytes())
+      f.write_all(format!("\n{}>", indent_str).as_bytes())
         .unwrap();
     }
     BookItem::Separator => {
-      f.write_all(format!("{indent}+Separator;\n", indent = indent_str).as_bytes())
+      f.write_all(format!("\n\n{indent}+Separator;", indent = indent_str).as_bytes())
         .unwrap();
     }
     BookItem::PartTitle(title) => {
       f.write_all(
         format!(
-          "{indent}+PartTitle{{{title}}}\n",
+          "\n\n{indent}+PartTitle{{{title}}}",
           indent = indent_str,
-          title = md2satysfi::escape_inline_text(title)
+          title = md2satysfi::html2satysfi::escape_inline_text(title)
         )
         .as_bytes(),
       )
