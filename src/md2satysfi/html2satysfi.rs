@@ -157,10 +157,7 @@ fn node_to_satysfi_code(
                   .collect::<String>();
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!(
-                    "({});",
-                    make_code(true, &escape_code(&children_str), file_path)
-                  ),
+                  _ => format!("({});", make_code(true, &escape_code(&children_str))),
                 }
               }
               ChildrenType::InlineCode => {
@@ -179,10 +176,7 @@ fn node_to_satysfi_code(
                   .collect::<String>();
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!(
-                    "({});",
-                    &make_code(false, &escape_code(&children_str), file_path)
-                  ),
+                  _ => format!("({});", &make_code(false, &escape_code(&children_str))),
                 }
               }
               ChildrenType::BlockList => {
@@ -288,10 +282,7 @@ fn node_to_satysfi_code(
                             format!(r#"(Some({{{}}}))"#, attribute_value)
                           }
                           AttributeType::String => {
-                            format!(
-                              r#"(Some({}))"#,
-                              make_code(false, attribute_value, file_path)
-                            )
+                            format!(r#"(Some({}))"#, make_code(false, attribute_value))
                           }
                           AttributeType::Int => {
                             format!(r#"(Some({}))"#, attribute_value.parse::<isize>().unwrap())
@@ -305,7 +296,7 @@ fn node_to_satysfi_code(
                               ch_file_path.parent().unwrap().to_str().unwrap(),
                               &attribute_value
                             );
-                            format!(r#"(Some({}))"#, make_code(false, &link, file_path))
+                            format!(r#"(Some({}))"#, make_code(false, &link))
                           }
                         },
                       },
@@ -322,7 +313,7 @@ fn node_to_satysfi_code(
                             format!(r#"({{{}}})"#, attribute_value)
                           }
                           AttributeType::String => {
-                            format!(r#"({})"#, make_code(false, &attribute_value, file_path))
+                            format!(r#"({})"#, make_code(false, &attribute_value))
                           }
                           AttributeType::Int => {
                             format!(r#"({})"#, attribute_value.parse::<isize>().unwrap())
@@ -336,7 +327,7 @@ fn node_to_satysfi_code(
                               ch_file_path.parent().unwrap().to_str().unwrap(),
                               &attribute_value
                             );
-                            format!(r#"({})"#, make_code(false, &link, file_path))
+                            format!(r#"({})"#, make_code(false, &link))
                           }
                         },
                       },
@@ -660,12 +651,10 @@ pub fn escape_inline_text(text: &str) -> String {
     .replace("@", "\\@")
 }
 
-fn make_code(is_block: bool, code_str: &str, file_path: &path::PathBuf) -> String {
+fn make_code(is_block: bool, code_str: &str) -> String {
   let i = count_accent_in_inline_text(code_str);
   let raw = "`".repeat(i + 1);
-  let code = mdbook_specific_features::hiding_code_lines(
-    &mdbook_specific_features::parse_include_file(&code_str, file_path),
-  );
+  let code = mdbook_specific_features::hiding_code_lines(&code_str);
   if is_block {
     format!("{raw}\n{code}\n{raw}", code = code, raw = raw)
   } else {
