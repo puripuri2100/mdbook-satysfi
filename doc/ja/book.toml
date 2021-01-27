@@ -1,0 +1,9 @@
+[book]
+authors = ["puripuri2100"]
+language = "ja"
+multilingual = false
+src = "src"
+title = "mdbook-satysfiのドキュメント"
+
+[output.html]
+
