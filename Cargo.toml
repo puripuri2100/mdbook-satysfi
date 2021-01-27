@@ -10,6 +10,7 @@ keywords = ["book", "markdown", "satysfi", "mdbook"]
 categories = ["encoding"]
 description = "A mdbook backend for generating SATySFi documents."
 exclude = ["tests/*", ".github/*"]
+documentation = "https://puripuri2100.github.io/mdbook-satysfi/ja/book/"
 
 [dependencies]
 mdbook = "0.4.6"
