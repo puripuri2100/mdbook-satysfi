@@ -578,6 +578,33 @@ const DEFAULT_HTML_CONFIG: &str = r#"
 [rt]
   command_name="rt"
   children_type="inline"
+[sup]
+  command_name="sup"
+  children_type="inline"
+[sub]
+  command_name="sub"
+  children_type="inline"
+[small]
+  command_name="small"
+  children_type="inline"
+[s]
+  command_name="stroke"
+  children_type="inline"
+[cite]
+  command_name="cite"
+  children_type="inline"
+[q]
+  command_name="q"
+  children_type="inline"
+[dfn]
+  command_name="dfn"
+  children_type="inline"
+[abbr]
+  command_name="abbr"
+  children_type="inline"
+  [[abbr.attribute]]
+  "name" = "title"
+  "type" = "inline option"
 [img]
   command_name="img"
   [[img.attribute]]
