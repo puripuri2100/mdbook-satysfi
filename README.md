@@ -101,6 +101,24 @@ Then delete the `[output.satysfi]` configuration in `book.toml`:
 - [output.satysfi]
 ```
 
+## Build PDF file
+
+### Requirements
+
+- [opam](https://opam.ocaml.org/) 2
+    - See <https://opam.ocaml.org/doc/Install.html>.
+- OCaml 4.11.0 (installed by opam)
+- [Satyrographos](https://github.com/na4zagin3/satyrographos)
+- [SATySFi](https://github.com/gfngfn/SATySFi) 0.0.5 (installed by Satyrographos)
+- [satysfi-class-mdbook-satysfi](https://github.com/puripuri2100/satysfi-class-mdbook-satysfi) 0.2.0 (installed by Satyrographos)
+
+Please run:
+
+```sh
+satysfi book/satysfi/main.saty
+```
+
+
 ## Primary Dependencies
 
 `mdbook-satysfi` is built upon some really wonderful projects, including:
