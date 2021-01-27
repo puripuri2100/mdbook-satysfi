@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>mdbook-satysfiのドキュメント</title>
+        <title>mdbook-satysfi Documentation(ja)</title>
         
         <meta name="robots" content="noindex" />
         
@@ -15,7 +15,7 @@
 
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <meta name="description" content="">
+        <meta name="description" content="mdbook-satysfiのドキュメント">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
@@ -46,6 +46,9 @@
         <!-- Custom theme stylesheets -->
         
 
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         
     </head>
     <body>
@@ -129,7 +132,7 @@
                         
                     </div>
 
-                    <h1 class="menu-title">mdbook-satysfiのドキュメント</h1>
+                    <h1 class="menu-title">mdbook-satysfi Documentation(ja)</h1>
 
                     <div class="right-buttons">
                         
@@ -137,6 +140,10 @@
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         
+                        
+                        <a href="https://github.com/puripuri2100/mdbook-satysfi" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
                         
                     </div>
                 </div>
@@ -289,7 +296,9 @@ import-packages = [&quot;local&quot;]
         
         <script type="text/javascript">
         window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
         });
         </script>
         

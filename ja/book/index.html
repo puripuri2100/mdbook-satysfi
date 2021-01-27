@@ -3,10 +3,8 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title></title>
+        <title>mdbook-satysfi - mdbook-satysfi Documentation(ja)</title>
         
-        
-        <base href="/">
         
 
 
@@ -15,7 +13,7 @@
 
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <meta name="description" content="">
+        <meta name="description" content="mdbook-satysfiのドキュメント">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
@@ -46,6 +44,9 @@
         <!-- Custom theme stylesheets -->
         
 
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         
     </head>
     <body>
@@ -129,7 +130,7 @@
                         
                     </div>
 
-                    <h1 class="menu-title">mdbook-satysfiのドキュメント</h1>
+                    <h1 class="menu-title">mdbook-satysfi Documentation(ja)</h1>
 
                     <div class="right-buttons">
                         
@@ -137,6 +138,10 @@
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         
+                        
+                        <a href="https://github.com/puripuri2100/mdbook-satysfi" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
                         
                     </div>
                 </div>
@@ -165,8 +170,23 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#document-not-found-404" id="document-not-found-404">Document not found (404)</a></h1>
-<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+                        <h1><a class="header" href="#mdbook-satysfi" id="mdbook-satysfi">mdbook-satysfi</a></h1>
+<p><strong>mdbook-satysfi</strong>はmarkdownファイルからHTMLファイルで構成された<em>book</em>を生成するRust製のソフトウェアである<a href="https://rust-lang.github.io/mdBook/index.html">mdbook</a>の拡張機能を提供するソフトウェアです。</p>
+<p>mdbook-satysfiをインストールした状態でbook.tomlに<code>[output.satysfi]</code>という記述を追加して<code>mdbook build</code>を実行すると、bookの内容と同じ内容のSATySFiのドキュメントファイルが生成されます。</p>
+<h2><a class="header" href="#実装" id="実装">実装</a></h2>
+<p>実装はRustで行っています。</p>
+<p>リポジトリは<a href="https://github.com/puripuri2100/mdbook-satysfi">puripuri2100/mdbook-satysfi</a>です。</p>
+<h2><a class="header" href="#依存するもの" id="依存するもの">依存するもの</a></h2>
+<p>インストールにはRustとCargoを必要とします。</p>
+<p>また、生成されたドキュメントファイルを処理するためには<a href="https://github.com/puripuri2100/satysfi-class-mdbook-satysfi">class-mdbook-satysfi</a>というSATySFi用のライブラリのv0.2.0が必要であり、これのインストールには<a href="https://github.com/na4zagin3/satyrographos">satyrographos</a>が必要です。
+当然のことながら<a href="https://github.com/gfngfn/SATySFi">SATySFi</a>も必要です。</p>
+<h2><a class="header" href="#インストール方法" id="インストール方法">インストール方法</a></h2>
+<p>RustとCargoをインストールした状態で</p>
+<pre><code>cargo install --git &quot;https://github.com/puripuri2100/mdbook-satysfi.git&quot;
+</code></pre>
+<p>と行うことで最新版が手に入ります。</p>
+<h2><a class="header" href="#license" id="license">License</a></h2>
+<p>mdbook-satysfiはMITライセンスのもと公開されています。</p>
 
                     </main>
 
@@ -174,6 +194,10 @@
                         <!-- Mobile navigation buttons -->
                         
 
+                        
+                            <a rel="next" href="specify-packages-to-load.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -184,6 +208,10 @@
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
 
+                
+                    <a rel="next" href="specify-packages-to-load.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 

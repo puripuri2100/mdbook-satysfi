@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>mdbook-satysfi - mdbook-satysfiのドキュメント</title>
+        <title>HTMLタグを変換する - mdbook-satysfi Documentation(ja)</title>
         
         
 
@@ -13,7 +13,7 @@
 
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <meta name="description" content="">
+        <meta name="description" content="mdbook-satysfiのドキュメント">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
@@ -44,6 +44,9 @@
         <!-- Custom theme stylesheets -->
         
 
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         
     </head>
     <body>
@@ -95,7 +98,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html" class="active"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html" class="active"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -127,7 +130,7 @@
                         
                     </div>
 
-                    <h1 class="menu-title">mdbook-satysfiのドキュメント</h1>
+                    <h1 class="menu-title">mdbook-satysfi Documentation(ja)</h1>
 
                     <div class="right-buttons">
                         
@@ -135,6 +138,10 @@
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         
+                        
+                        <a href="https://github.com/puripuri2100/mdbook-satysfi" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
                         
                     </div>
                 </div>
@@ -163,34 +170,62 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#mdbook-satysfi" id="mdbook-satysfi">mdbook-satysfi</a></h1>
-<p><strong>mdbook-satysfi</strong>はmarkdownファイルからHTMLファイルで構成された<em>book</em>を生成するRust製のソフトウェアである<a href="https://rust-lang.github.io/mdBook/index.html">mdbook</a>の拡張機能を提供するソフトウェアです。</p>
-<p>mdbook-satysfiをインストールした状態でbook.tomlに<code>[output.satysfi]</code>という記述を追加して<code>mdbook build</code>を実行すると、bookの内容と同じ内容のSATySFiのドキュメントファイルが生成されます。</p>
-<h2><a class="header" href="#実装" id="実装">実装</a></h2>
-<p>実装はRustで行っています。</p>
-<p>リポジトリは<a href="https://github.com/puripuri2100/mdbook-satysfi">puripuri2100/mdbook-satysfi</a>です。</p>
-<h2><a class="header" href="#依存するもの" id="依存するもの">依存するもの</a></h2>
-<p>インストールにはRustとCargoを必要とします。</p>
-<p>また、生成されたドキュメントファイルを処理するためには<a href="https://github.com/puripuri2100/satysfi-class-mdbook-satysfi">class-mdbook-satysfi</a>というSATySFi用のライブラリのv0.2.0が必要であり、これのインストールには<a href="https://github.com/na4zagin3/satyrographos">satyrographos</a>が必要です。
-当然のことながら<a href="https://github.com/gfngfn/SATySFi">SATySFi</a>も必要です。</p>
-<h2><a class="header" href="#インストール方法" id="インストール方法">インストール方法</a></h2>
-<p>RustとCargoをインストールした状態で</p>
-<pre><code>cargo install --git &quot;https://github.com/puripuri2100/mdbook-satysfi.git&quot;
+                        <h1><a class="header" href="#htmlタグを変換する" id="htmlタグを変換する">HTMLタグを変換する</a></h1>
+<p>markdownファイル内にはHTMLタグを直接書くことができます。</p>
+<p>ここではそのHTMLタグを処理するための方法を説明します。</p>
+<p>ただし、mdbook-satysfiはmarkdownファイルを一旦HTMLに変換した後に処理をする方法を取っているため、意図しないタグの衝突が起こる可能性があることに充分注意して下さい。</p>
+<p>book.toml内に以下のようなコードを書いてください。</p>
+<pre><code>[output.satysfi]
+  [output.satysfi.html]
+    [output.satysfi.html.hoge]
+      command_name=&quot;fuga&quot;
+      children_type=&quot;inline&quot;
+      [[output.satysfi.html.hoge.attribute]]
+        name = &quot;src&quot;
+        type = &quot;link option&quot;
+      [[output.satysfi.html.hoge.attribute]]
+        name = &quot;title&quot;
+        type = &quot;inline&quot;
 </code></pre>
-<p>と行うことで最新版が手に入ります。</p>
-<h2><a class="header" href="#license" id="license">License</a></h2>
-<p>mdbook-satysfiはMITライセンスのもと公開されています。</p>
+<p><code>[output.satysfi.html.&lt;tag-name&gt;]</code>とすることで、そのタグが実際に書かれていた場合にその下に書いた設定が適用されます。</p>
+<p><code>command_name</code>はコマンドを出力する際にどうするかを設定します。デフォルトはタグ名です。</p>
+<p><code>children_type</code>は子要素がどうなるかを表しています。書かないと子要素は無視されます。
+与えられるのは</p>
+<ul>
+<li><code>inline</code></li>
+<li><code>block</code></li>
+<li><code>inline list</code></li>
+<li><code>block list</code></li>
+<li><code>inline code</code></li>
+<li><code>block code</code></li>
+</ul>
+<p>だけです。</p>
+<p><code>[[output.satysfi.html.&lt;tag-name&gt;.attribute]]</code>とすることで属性をSATySFiコマンドの引数に変換することができます。</p>
+<p>属性はこのテーブルに追加した順に渡されます。</p>
+<p><code>name</code>は属性の名前です。</p>
+<p><code>type</code>は属性の値がどうなるかを表しています。<code>* option</code>のとき、その属性がなかった場合は<code>None</code>になります。<code>option</code>が付いていないでその属性がなかった場合は実行時エラーとなります。</p>
+<p>与えられるのは</p>
+<ul>
+<li><code>string</code></li>
+<li><code>link</code></li>
+<li><code>int</code></li>
+<li><code>bool</code></li>
+<li><code>inline</code></li>
+<li><code>block</code></li>
+</ul>
+<p>とそれぞれの<code>option</code>です。</p>
+<p><code>link</code>とは相対パスのことで、画像タグの処理などに使うことを想定しています。与えられた相対パスをその原稿の書かれたmdファイルのパスと結合してSATySFiファイルに書き出します。</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-
-                        
-                            <a rel="next" href="specify-packages-to-load.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="specify-packages-to-load.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
+                        
+
                         
 
                         <div style="clear: both"></div>
@@ -200,11 +235,11 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-
-                
-                    <a rel="next" href="specify-packages-to-load.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="prev" href="specify-packages-to-load.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
+                
+
                 
             </nav>
 
