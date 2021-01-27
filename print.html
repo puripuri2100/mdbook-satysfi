@@ -1,0 +1,299 @@
+<!DOCTYPE HTML>
+<html lang="ja" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>mdbook-satysfiのドキュメント</title>
+        
+        <meta name="robots" content="noindex" />
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">mdbook-satysfiのドキュメント</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#mdbook-satysfi" id="mdbook-satysfi">mdbook-satysfi</a></h1>
+<p><strong>mdbook-satysfi</strong>はmarkdownファイルからHTMLファイルで構成された<em>book</em>を生成するRust製のソフトウェアである<a href="https://rust-lang.github.io/mdBook/index.html">mdbook</a>の拡張機能を提供するソフトウェアです。</p>
+<p>mdbook-satysfiをインストールした状態でbook.tomlに<code>[output.satysfi]</code>という記述を追加して<code>mdbook build</code>を実行すると、bookの内容と同じ内容のSATySFiのドキュメントファイルが生成されます。</p>
+<h2><a class="header" href="#実装" id="実装">実装</a></h2>
+<p>実装はRustで行っています。</p>
+<p>リポジトリは<a href="https://github.com/puripuri2100/mdbook-satysfi">puripuri2100/mdbook-satysfi</a>です。</p>
+<h2><a class="header" href="#依存するもの" id="依存するもの">依存するもの</a></h2>
+<p>インストールにはRustとCargoを必要とします。</p>
+<p>また、生成されたドキュメントファイルを処理するためには<a href="https://github.com/puripuri2100/satysfi-class-mdbook-satysfi">class-mdbook-satysfi</a>というSATySFi用のライブラリのv0.2.0が必要であり、これのインストールには<a href="https://github.com/na4zagin3/satyrographos">satyrographos</a>が必要です。
+当然のことながら<a href="https://github.com/gfngfn/SATySFi">SATySFi</a>も必要です。</p>
+<h2><a class="header" href="#インストール方法" id="インストール方法">インストール方法</a></h2>
+<p>RustとCargoをインストールした状態で</p>
+<pre><code>cargo install --git &quot;https://github.com/puripuri2100/mdbook-satysfi.git&quot;
+</code></pre>
+<p>と行うことで最新版が手に入ります。</p>
+<h2><a class="header" href="#license" id="license">License</a></h2>
+<p>mdbook-satysfiはMITライセンスのもと公開されています。</p>
+<h1><a class="header" href="#読み込むパッケージを指定する" id="読み込むパッケージを指定する">読み込むパッケージを指定する</a></h1>
+<p>book.tomlに以下のような内容を加えることで読み込むパッケージを追加することができます。</p>
+<p>クラスファイルを指定すれば上書きすることも可能です。</p>
+<pre><code>[output.satysfi]
+require-packages = [&quot;base/int&quot;]
+import-packages = [&quot;local&quot;]
+</code></pre>
+<p><code>require-packages</code>ではstring arrayを与えます。指定したパッケージが<code>@require:</code>で読み込まれます。</p>
+<p><code>import-packages</code>では、指定したパッケージが<code>@imports:</code>で読み込まれます。</p>
+<h1><a class="header" href="#htmlタグを変換する" id="htmlタグを変換する">HTMLタグを変換する</a></h1>
+<p>markdownファイル内にはHTMLタグを直接書くことができます。</p>
+<p>ここではそのHTMLタグを処理するための方法を説明します。</p>
+<p>ただし、mdbook-satysfiはmarkdownファイルを一旦HTMLに変換した後に処理をする方法を取っているため、意図しないタグの衝突が起こる可能性があることに充分注意して下さい。</p>
+<p>book.toml内に以下のようなコードを書いてください。</p>
+<pre><code>[output.satysfi]
+  [output.satysfi.html]
+    [output.satysfi.html.hoge]
+      command_name=&quot;fuga&quot;
+      children_type=&quot;inline&quot;
+      [[output.satysfi.html.hoge.attribute]]
+        name = &quot;src&quot;
+        type = &quot;link option&quot;
+      [[output.satysfi.html.hoge.attribute]]
+        name = &quot;title&quot;
+        type = &quot;inline&quot;
+</code></pre>
+<p><code>[output.satysfi.html.&lt;tag-name&gt;]</code>とすることで、そのタグが実際に書かれていた場合にその下に書いた設定が適用されます。</p>
+<p><code>command_name</code>はコマンドを出力する際にどうするかを設定します。デフォルトはタグ名です。</p>
+<p><code>children_type</code>は子要素がどうなるかを表しています。書かないと子要素は無視されます。
+与えられるのは</p>
+<ul>
+<li><code>inline</code></li>
+<li><code>block</code></li>
+<li><code>inline list</code></li>
+<li><code>block list</code></li>
+<li><code>inline code</code></li>
+<li><code>block code</code></li>
+</ul>
+<p>だけです。</p>
+<p><code>[[output.satysfi.html.&lt;tag-name&gt;.attribute]]</code>とすることで属性をSATySFiコマンドの引数に変換することができます。</p>
+<p>属性はこのテーブルに追加した順に渡されます。</p>
+<p><code>name</code>は属性の名前です。</p>
+<p><code>type</code>は属性の値がどうなるかを表しています。<code>* option</code>のとき、その属性がなかった場合は<code>None</code>になります。<code>option</code>が付いていないでその属性がなかった場合は実行時エラーとなります。</p>
+<p>与えられるのは</p>
+<ul>
+<li><code>string</code></li>
+<li><code>link</code></li>
+<li><code>int</code></li>
+<li><code>bool</code></li>
+<li><code>inline</code></li>
+<li><code>block</code></li>
+</ul>
+<p>とそれぞれの<code>option</code>です。</p>
+<p><code>link</code>とは相対パスのことで、画像タグの処理などに使うことを想定しています。与えられた相対パスをその原稿の書かれたmdファイルのパスと結合してSATySFiファイルに書き出します。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>
