@@ -22,7 +22,7 @@ mdbook-satysfiをインストールした状態でbook.tomlに`[output.satysfi]`
 RustとCargoをインストールした状態で
 
 ```
-cargo install --git "https://github.com/puripuri2100/mdbook-satysfi.git"
+cargo install mdbook-satysfi
 ```
 
 と行うことで最新版が手に入ります。
