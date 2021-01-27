@@ -3,7 +3,14 @@ authors = ["puripuri2100"]
 language = "ja"
 multilingual = false
 src = "src"
-title = "mdbook-satysfiのドキュメント"
+title = "mdbook-satysfi Documentation(ja)"
+description = "mdbook-satysfiのドキュメント"
+
+[build]
+build-dir = "book"
 
 [output.html]
-
+git-repository-url = "https://github.com/puripuri2100/mdbook-satysfi"
+git-repository-icon = "fa-github"
+site-url = "https://puripuri2100.github.io/mdbook-satysfi/ja/book/"
+mathjax-support = true
