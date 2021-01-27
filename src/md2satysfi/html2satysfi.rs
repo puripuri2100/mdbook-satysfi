@@ -351,7 +351,7 @@ fn node_to_satysfi_code(
             }
             Mode::Inline => {
               format!(
-                "\\{command_name}{attributes_str}{children_str}",
+                " \\{command_name}{attributes_str}{children_str} ",
                 command_name = command_name,
                 attributes_str = attributes_str,
                 children_str = children_str
@@ -379,7 +379,7 @@ fn node_to_satysfi_code(
 #[test]
 fn check_html_to_satysfi_code_1() {
   assert_eq!(
-    "\n    +p{this is a image.\\code(`` let p = `<p>x</p>` ``);}".to_owned(),
+    "\n    +p{this is a image. \\code(`` let p = `<p>x</p>` ``); }".to_owned(),
     html_to_satysfi_code(
       r#"<p> this is a image. <code>let p = `<p>x</p>`</code></p>"#,
       Mode::Block,
@@ -393,7 +393,7 @@ fn check_html_to_satysfi_code_1() {
 #[test]
 fn check_html_to_satysfi_code_2() {
   assert_eq!(
-    r#"\p{this is a image.\code(`` let p = `<p>x</p>` ``);}"#.to_owned(),
+    r#" \p{this is a image. \code(`` let p = `<p>x</p>` ``); } "#.to_owned(),
     html_to_satysfi_code(
       r#"<p> this is a image.<code>let p = `<p>x</p>`</code></p>"#,
       Mode::Inline,
@@ -407,7 +407,7 @@ fn check_html_to_satysfi_code_2() {
 #[test]
 fn check_html_to_satysfi_code_3() {
   assert_eq!(
-    r#"\ruby{如何\rp{(}\rt{いか}\rp{)}}"#.to_string(),
+    r#" \ruby{如何 \rp{(}  \rt{いか}  \rp{)} } "#.to_string(),
     html_to_satysfi_code(
       r#"<ruby>如何<rp>(</rp><rt>いか</rt><rp>)</rp></ruby>"#,
       Mode::Inline,
