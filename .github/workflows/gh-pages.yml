@@ -8,8 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    container:
-      image: amutake/satysfi:0.0.5-83-g360d941
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -42,7 +40,7 @@ jobs:
           opam update
           opam install satysfi-class-mdbook-satysfi
           satyrographos install
-          satysfi book/satysfi/main.saty -o book/satysfi/ja.pdf
+          docker run --rm -v $(pwd):/satysfi amutake/satysfi:0.0.5-83-g360d941 satysfi book/satysfi/main.saty -o book/satysfi/ja.saty
           cd ../..
       - run: |
           mkdir -p pages/ja
