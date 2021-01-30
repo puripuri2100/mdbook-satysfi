@@ -396,6 +396,7 @@ fn check_html_to_satysfi_code_1() {
       &map::Map::new(),
       &path::PathBuf::from("ch1/hoge.md"),
     )
+    .unwrap_or_default()
   )
 }
 
@@ -410,6 +411,7 @@ fn check_html_to_satysfi_code_2() {
       &map::Map::new(),
       &path::PathBuf::from("ch1/hoge.md")
     )
+    .unwrap_or_default()
   )
 }
 
@@ -424,6 +426,7 @@ fn check_html_to_satysfi_code_3() {
       &map::Map::new(),
       &path::PathBuf::from("ch1/hoge.md")
     )
+    .unwrap_or_default()
   )
 }
 
@@ -438,6 +441,7 @@ fn check_html_to_satysfi_code_4() {
       &map::Map::new(),
       &path::PathBuf::from("ch1/hoge.md")
     )
+    .unwrap_or_default()
   )
 }
 
