@@ -12,7 +12,8 @@
 [license-badge]: https://img.shields.io/badge/license-MIT-blue
 
 
-- **[Documentation(ja)](https://puripuri2100.github.io/mdbook-satysfi/ja/book/)**
+- **[Documentation(ja)](https://puripuri2100.github.io/mdbook-satysfi/ja/)**
+- **[Documentation PDF(ja)](https://puripuri2100.github.io/mdbook-satysfi/ja/ja.pdf)**
 
 
 ## Status of Rust Bookshelf

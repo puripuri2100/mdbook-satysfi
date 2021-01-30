@@ -12,6 +12,13 @@ jobs:
       image: amutake/satysfi:0.0.5-83-g360d941
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -23,15 +30,21 @@ jobs:
         with:
           mdbook-version: '0.4.6'
 
+      - run: cargo install mdbook-satysfi
+
       - run: |
-          cargo install mdbook-satysfi
           cd doc/ja
           mdbook build
+
+      - run: |
+          export HOME=/root # workaround
+          eval $(opam env)
           opam update
           opam install satysfi-class-mdbook-satysfi
           satyrographos install
           satysfi book/satysfi/main.saty -o book/satysfi/ja.pdf
           cd ../..
+      - run: |
           mkdir -p pages/ja
           cp -r -f doc/ja/book/html/* pages/ja
           cp -f doc/ja/book/satysfi/ja.pdf pages/ja
