@@ -42,8 +42,7 @@ jobs:
           opam update
           opam install satysfi-class-mdbook-satysfi
           satyrographos install
-          docker run --rm -v $(pwd):/satysfi amutake/satysfi:${{ matrix.version }} satysfi doc.saty
-          cd ../..
+          satysfi $(pwd)/doc/ja/book/satysfi/main.saty -o $(pwd)/doc/ja/book/satysfi/ja.pdf
       - run: |
           mkdir -p pages/ja
           cp -r -f doc/ja/book/html/* pages/ja
