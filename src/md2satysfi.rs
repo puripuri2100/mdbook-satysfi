@@ -1,3 +1,4 @@
+use anyhow::Result;
 use pulldown_cmark::{html, Event, Options, Parser, Tag};
 use std::path;
 use toml::map;
@@ -10,7 +11,7 @@ pub fn md_to_satysfi_code(
   file_path: &path::PathBuf,
   ch_file_path: &path::PathBuf,
   html_cfg: &map::Map<String, toml::Value>,
-) -> Result<String, ()> {
+) -> Result<String> {
   let mut options = Options::empty();
   options.insert(Options::ENABLE_TABLES);
   options.insert(Options::ENABLE_FOOTNOTES);
@@ -52,6 +53,6 @@ pub fn md_to_satysfi_code(
     file_path,
     html_cfg,
     ch_file_path,
-  );
+  )?;
   Ok(satysfi_code)
 }

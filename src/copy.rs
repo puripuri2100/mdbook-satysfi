@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use std::fs;
 use std::path::PathBuf;
 
@@ -6,14 +7,14 @@ pub fn copy_files_except_ext(
   to: &PathBuf,
   avoid_dir: Option<&PathBuf>,
   ignore_ext_lst: &[&str],
-) {
+) -> Result<()> {
   if from != to {
-    for entry_result in fs::read_dir(from).unwrap() {
-      let entry = entry_result.unwrap();
-      let metadata = &entry.metadata().unwrap();
+    for entry_result in fs::read_dir(from)? {
+      let entry = entry_result?;
+      let metadata = &entry.metadata()?;
       if metadata.is_file() {
         let path = entry.path();
-        let ext_str_opt = path.extension().map(|ext| ext.to_str().unwrap());
+        let ext_str_opt = path.extension().map(|ext| ext.to_str()).flatten();
         let b = match ext_str_opt {
           Some(ext_str) => !ignore_ext_lst
             .iter()
@@ -21,7 +22,15 @@ pub fn copy_files_except_ext(
           None => true,
         };
         if b {
-          fs::copy(entry.path(), to.join(entry.path().file_name().unwrap())).unwrap();
+          fs::copy(
+            entry.path(),
+            to.join(
+              entry
+                .path()
+                .file_name()
+                .with_context(|| "Cannot take file name")?,
+            ),
+          )?;
         }
       } else if metadata.is_dir() {
         let b = match avoid_dir {
@@ -35,9 +44,10 @@ pub fn copy_files_except_ext(
             &to.join(entry.file_name()),
             avoid_dir,
             ignore_ext_lst,
-          );
+          )?;
         }
       }
     }
   }
+  Ok(())
 }

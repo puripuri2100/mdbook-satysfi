@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use regex::Regex;
 use std::fs;
 use std::path;
@@ -31,7 +32,7 @@ enum StrWithAnchor {
   Str(String),
 }
 
-pub fn parse_include_file(text: &str, file_path: &path::PathBuf) -> String {
+pub fn parse_include_file(text: &str, file_path: &path::PathBuf) -> Result<String> {
   let text_type_list = parse_include_file_to_text_type_list(text);
   text_type_list
     .iter()
@@ -426,12 +427,16 @@ fn check_parse_include_file_12() {
   )
 }
 
-fn text_type_to_string(text_type: &TextType, file_path: &path::PathBuf) -> String {
-  match text_type {
+fn text_type_to_string(text_type: &TextType, file_path: &path::PathBuf) -> Result<String> {
+  let s = match text_type {
     TextType::Text(str) => str.to_string(),
     TextType::Include(link_type) => {
-      let path = file_path.parent().unwrap().join(link_type.clone().path);
-      let text = fs::read_to_string(&path).unwrap();
+      let path = file_path
+        .parent()
+        .with_context(|| "Cannot parent file path")?
+        .join(link_type.clone().path);
+      let text =
+        fs::read_to_string(&path).with_context(|| format!("Cannote read file: {:?}", path))?;
       let text_lines_len = text.lines().count();
       let text_lines = text.lines();
       let text_with_range_name = make_text_with_range_anchor(&text);
@@ -473,8 +478,12 @@ fn text_type_to_string(text_type: &TextType, file_path: &path::PathBuf) -> Strin
       }
     }
     TextType::RustDocInclude(link_type) => {
-      let path = file_path.parent().unwrap().join(link_type.clone().path);
-      let text = fs::read_to_string(&path).unwrap();
+      let path = file_path
+        .parent()
+        .with_context(|| "Cannot parent file path")?
+        .join(link_type.clone().path);
+      let text =
+        fs::read_to_string(&path).with_context(|| format!("Cannote read file: {:?}", path))?;
       let text_with_range_name = make_text_with_range_anchor(&text);
       let range = link_type.clone().range;
       match range {
@@ -522,7 +531,8 @@ fn text_type_to_string(text_type: &TextType, file_path: &path::PathBuf) -> Strin
         }
       }
     }
-  }
+  };
+  Ok(s)
 }
 
 fn make_text_with_range_anchor(text: &str) -> Vec<StrWithAnchor> {
@@ -531,8 +541,10 @@ fn make_text_with_range_anchor(text: &str) -> Vec<StrWithAnchor> {
 }
 
 fn make_str_with_anchor(s: &str) -> StrWithAnchor {
-  let anchor_start_re = Regex::new(r".*ANCHOR:\s*(?P<start_name>[\w_-]+)[\W]*.*").unwrap();
-  let anchor_end_re = Regex::new(r".*ANCHOR_END:\s*(?P<end_name>[\w_-]+)[\W]*.*").unwrap();
+  let anchor_start_re =
+    Regex::new(r".*ANCHOR:\s*(?P<start_name>[\w_-]+)[\W]*.*").expect("This is safe regex");
+  let anchor_end_re =
+    Regex::new(r".*ANCHOR_END:\s*(?P<end_name>[\w_-]+)[\W]*.*").expect("This is safe regex");
   let is_start = anchor_start_re.is_match(s);
   let is_end = anchor_end_re.is_match(s);
   match (is_start, is_end) {

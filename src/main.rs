@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
@@ -8,21 +9,22 @@ use toml::map;
 mod copy;
 mod md2satysfi;
 
-fn main() {
+fn main() -> Result<()> {
   let stdin = io::stdin();
   let mut stdin = BufReader::new(stdin);
-  let ctx = RenderContext::from_json(&mut stdin).unwrap();
+  let ctx = RenderContext::from_json(&mut stdin)?;
 
   let destination = &ctx.destination;
   let _ = fs::create_dir_all(&destination);
-  let f = File::create(&destination.join("main.saty")).unwrap();
+  let f =
+    File::create(&destination.join("main.saty")).with_context(|| "Cannot make 'main.saty'")?;
   let mut f = BufWriter::new(f);
 
   let root = &ctx.source_dir();
 
   let src_dir = &ctx.root.join(&ctx.config.book.src);
   let build_dir = &ctx.root.join(&ctx.config.build.build_dir);
-  copy::copy_files_except_ext(src_dir, &destination, Some(build_dir), &["md"]);
+  copy::copy_files_except_ext(src_dir, &destination, Some(build_dir), &["md"])?;
 
   let cfg = &ctx.config;
   let book = &cfg.book;
@@ -141,14 +143,16 @@ document (|
       language_opt = language_opt_str,
     )
     .as_bytes(),
-  )
-  .unwrap();
+  )?;
 
   ctx
     .book
     .iter()
-    .for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg));
-  f.write_all(b"\n>\n").unwrap();
+    .map(|item| write_bookitme(&mut f, item, &root, &html_cfg))
+    .collect::<Result<_>>()?;
+
+  f.write_all(b"\n>\n")?;
+  Ok(())
 }
 
 fn write_bookitme(
@@ -156,7 +160,7 @@ fn write_bookitme(
   item: &BookItem,
   root: &path::PathBuf,
   html_cfg: &map::Map<String, toml::Value>,
-) {
+) -> Result<()> {
   let indent_str = "  ".to_string();
   match item {
     BookItem::Chapter(ch) => {
@@ -183,25 +187,21 @@ fn write_bookitme(
           name = md2satysfi::html2satysfi::escape_inline_text(&ch_name)
         )
         .as_bytes(),
-      )
-      .unwrap();
+      )?;
       let ch_file_path_opt = ch.clone().path;
       match ch_file_path_opt {
         None => (),
         Some(ch_file_path) => {
           let path = root.join(&ch_file_path);
           let s =
-            md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path, html_cfg)
-              .unwrap();
-          f.write_all(s.as_bytes()).unwrap()
+            md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path, html_cfg)?;
+          f.write_all(s.as_bytes())?
         }
       };
-      f.write_all(format!("\n{}>", indent_str).as_bytes())
-        .unwrap();
+      f.write_all(format!("\n{}>", indent_str).as_bytes())?;
     }
     BookItem::Separator => {
-      f.write_all(format!("\n\n{indent}+Separator;", indent = indent_str).as_bytes())
-        .unwrap();
+      f.write_all(format!("\n\n{indent}+Separator;", indent = indent_str).as_bytes())?;
     }
     BookItem::PartTitle(title) => {
       f.write_all(
@@ -211,8 +211,8 @@ fn write_bookitme(
           title = md2satysfi::html2satysfi::escape_inline_text(title)
         )
         .as_bytes(),
-      )
-      .unwrap();
+      )?;
     }
-  }
+  };
+  Ok(())
 }

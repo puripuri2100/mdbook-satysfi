@@ -1,4 +1,5 @@
 use super::mdbook_specific_features;
+use anyhow::{Context, Result};
 use html_parser::{Dom, Node};
 use std::path;
 use toml::map;
@@ -16,12 +17,14 @@ pub fn html_to_satysfi_code(
   file_path: &path::PathBuf,
   html_cfg: &map::Map<String, toml::Value>,
   ch_file_path: &path::PathBuf,
-) -> String {
-  let node_lst = Dom::parse(html_code).unwrap().children;
-  node_lst
+) -> Result<String> {
+  let html = Dom::parse(html_code).with_context(|| "Missing Parse HTML tag")?;
+  let node_lst = html.children;
+  let s = node_lst
     .iter()
     .map(|node| node_to_satysfi_code(node, mode, file_path, html_cfg, ch_file_path, 2))
-    .collect()
+    .collect();
+  s
 }
 
 fn node_to_satysfi_code(
@@ -31,20 +34,20 @@ fn node_to_satysfi_code(
   html_cfg: &map::Map<String, toml::Value>,
   ch_file_path: &path::PathBuf,
   indent: usize,
-) -> String {
+) -> Result<String> {
   match node {
-    Node::Comment(_) => String::new(),
+    Node::Comment(_) => Ok(String::new()),
     Node::Text(str) => match mode {
-      Mode::Inline => escape_inline_text(&mdbook_specific_features::parse_include_file(
-        str, file_path,
+      Mode::Inline => Ok(escape_inline_text(
+        &mdbook_specific_features::parse_include_file(str, file_path)?,
       )),
-      Mode::Block => format!(
+      Mode::Block => Ok(format!(
         "+p{{{}}}",
         escape_inline_text(&mdbook_specific_features::parse_include_file(
           str, file_path
-        ))
-      ),
-      Mode::Code => str.to_string(),
+        )?)
+      )),
+      Mode::Code => Ok(str.to_string()),
     },
     Node::Element(element) => {
       let tag_name =
@@ -105,7 +108,7 @@ fn node_to_satysfi_code(
                       indent + 1,
                     ),
                   })
-                  .collect::<String>();
+                  .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
                   _ => {
@@ -135,7 +138,7 @@ fn node_to_satysfi_code(
                       indent + 1,
                     ),
                   })
-                  .collect::<String>();
+                  .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
                   _ => format!("{{{}}}", children_str),
@@ -154,7 +157,7 @@ fn node_to_satysfi_code(
                       indent + 1,
                     )
                   })
-                  .collect::<String>();
+                  .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
                   _ => format!("({});", make_code(true, &escape_code(&children_str))),
@@ -173,7 +176,7 @@ fn node_to_satysfi_code(
                       indent + 1,
                     )
                   })
-                  .collect::<String>();
+                  .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
                   _ => format!("({});", &make_code(false, &escape_code(&children_str))),
@@ -201,7 +204,7 @@ fn node_to_satysfi_code(
                 let indent_str = "  ".repeat(indent + 1);
                 let mut children_str = String::new();
                 for children_value in children_iter {
-                  children_str.push_str(&format!("\n{}('<{}>);", indent_str, children_value))
+                  children_str.push_str(&format!("\n{}('<{}>);", indent_str, children_value?))
                 }
                 match mode {
                   Mode::Code => children_str,
@@ -233,7 +236,7 @@ fn node_to_satysfi_code(
                 let indent_str = "  ".repeat(indent + 1);
                 let mut children_str = String::new();
                 for children_value in children_iter {
-                  children_str.push_str(&format!("\n{}({{{}}});", indent_str, children_value))
+                  children_str.push_str(&format!("\n{}({{{}}});", indent_str, children_value?))
                 }
                 match mode {
                   Mode::Code => children_str,
@@ -260,66 +263,69 @@ fn node_to_satysfi_code(
                     let attribute_value_opt = attributes.get(attribute_name).unwrap_or(&None);
                     match attribute_type {
                       AttributeTypeOrOption::Option(_) => match attribute_value_opt {
-                        None => String::new(),
+                        None => Ok(String::new()),
                         Some(attribute_value) => {
-                          format!(r#" {}="{}""#, attribute_name, attribute_value)
+                          Ok(format!(r#" {}="{}""#, attribute_name, attribute_value))
                         }
                       },
-                      AttributeTypeOrOption::Normal(_) => {
-                        let attribute_value = attribute_value_opt.clone().unwrap();
-                        format!(r#" {}="{}""#, attribute_name, attribute_value)
-                      }
+                      AttributeTypeOrOption::Normal(_) => attribute_value_opt
+                        .clone()
+                        .map(|attribute_value| {
+                          format!(r#" {}="{}""#, attribute_name, attribute_value)
+                        })
+                        .with_context(|| format!("Cannot get a value: {}", attribute_name)),
                     }
                   }
                   _ => {
                     let attribute_value_opt = attributes.get(attribute_name).unwrap_or(&None);
                     match attribute_type {
                       AttributeTypeOrOption::Option(attribute_type) => match attribute_value_opt {
-                        None => "(None)".to_string(),
+                        None => Ok("(None)".to_string()),
                         Some(attribute_value) => match attribute_type {
-                          AttributeType::BlockText => format!(r#"(Some('<{}>))"#, attribute_value),
+                          AttributeType::BlockText => {
+                            Ok(format!(r#"(Some('<{}>))"#, attribute_value))
+                          }
                           AttributeType::InlineText => {
-                            format!(r#"(Some({{{}}}))"#, attribute_value)
+                            Ok(format!(r#"(Some({{{}}}))"#, attribute_value))
                           }
                           AttributeType::String => {
-                            format!(r#"(Some({}))"#, make_code(false, attribute_value))
+                            Ok(format!(r#"(Some({}))"#, make_code(false, attribute_value)))
                           }
-                          AttributeType::Int => {
-                            format!(r#"(Some({}))"#, attribute_value.parse::<isize>().unwrap())
-                          }
-                          AttributeType::Bool => {
-                            format!(r#"(Some({}))"#, attribute_value.parse::<bool>().unwrap())
-                          }
+                          AttributeType::Int => Ok(format!(
+                            r#"(Some({}))"#,
+                            attribute_value.parse::<isize>().unwrap()
+                          )),
+                          AttributeType::Bool => Ok(format!(
+                            r#"(Some({}))"#,
+                            attribute_value.parse::<bool>().unwrap()
+                          )),
                           AttributeType::Link => {
                             let link = format!(
                               "{}/{}",
                               ch_file_path.parent().unwrap().to_str().unwrap(),
                               &attribute_value
                             );
-                            format!(r#"(Some({}))"#, make_code(false, &link))
+                            Ok(format!(r#"(Some({}))"#, make_code(false, &link)))
                           }
                         },
                       },
                       AttributeTypeOrOption::Normal(attribute_type) => match attribute_value_opt {
                         None => {
                           eprintln!(r#""{}" tag is not supported"#, tag_name);
-                          String::new()
+                          Ok(String::new())
                         }
                         Some(attribute_value) => match attribute_type {
-                          AttributeType::BlockText => {
-                            format!(r#"('<{}>)"#, attribute_value)
-                          }
-                          AttributeType::InlineText => {
-                            format!(r#"({{{}}})"#, attribute_value)
-                          }
+                          AttributeType::BlockText => Ok(format!(r#"('<{}>)"#, attribute_value)),
+                          AttributeType::InlineText => Ok(format!(r#"({{{}}})"#, attribute_value)),
                           AttributeType::String => {
-                            format!(r#"({})"#, make_code(false, &attribute_value))
+                            Ok(format!(r#"({})"#, make_code(false, &attribute_value)))
                           }
-                          AttributeType::Int => {
-                            format!(r#"({})"#, attribute_value.parse::<isize>().unwrap())
-                          }
+                          AttributeType::Int => Ok(format!(
+                            r#"({})"#,
+                            attribute_value.parse::<isize>().unwrap()
+                          )),
                           AttributeType::Bool => {
-                            format!(r#"({})"#, attribute_value.parse::<bool>().unwrap())
+                            Ok(format!(r#"({})"#, attribute_value.parse::<bool>().unwrap()))
                           }
                           AttributeType::Link => {
                             let link = format!(
@@ -327,49 +333,52 @@ fn node_to_satysfi_code(
                               ch_file_path.parent().unwrap().to_str().unwrap(),
                               &attribute_value
                             );
-                            format!(r#"({})"#, make_code(false, &link))
+                            Ok(format!(r#"({})"#, make_code(false, &link)))
                           }
                         },
                       },
                     }
                   }
                 },
-                _ => String::new(),
+                _ => Ok(String::new()),
               }
             })
-            .collect::<String>();
+            .collect::<Result<String>>();
           match mode {
             Mode::Block => {
               let indent_str = "  ".repeat(indent);
-              format!(
+              let s = format!(
                 "\n{indent}+{command_name}{attributes_str}{children_str}",
                 indent = indent_str,
                 command_name = command_name,
-                attributes_str = attributes_str,
+                attributes_str = attributes_str?,
                 children_str = children_str
-              )
+              );
+              Ok(s)
             }
             Mode::Inline => {
-              format!(
+              let s = format!(
                 " \\{command_name}{attributes_str}{children_str} ",
                 command_name = command_name,
-                attributes_str = attributes_str,
+                attributes_str = attributes_str?,
                 children_str = children_str
-              )
+              );
+              Ok(s)
             }
             Mode::Code => {
-              format!(
+              let s = format!(
                 "<{tag_name}{attributes_str}>{children_str}</{tag_name}>",
                 tag_name = tag_name,
-                attributes_str = attributes_str,
+                attributes_str = attributes_str?,
                 children_str = children_str
-              )
+              );
+              Ok(s)
             }
           }
         }
         None => {
           eprintln!(r#""{}" tag is not supported"#, tag_name);
-          String::new()
+          Ok(String::new())
         }
       }
     }
