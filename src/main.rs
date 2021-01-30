@@ -148,8 +148,7 @@ document (|
   ctx
     .book
     .iter()
-    .map(|item| write_bookitme(&mut f, item, &root, &html_cfg))
-    .collect::<Result<_>>()?;
+    .try_for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg))?;
 
   f.write_all(b"\n>\n")?;
   Ok(())
