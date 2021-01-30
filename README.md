@@ -1,9 +1,12 @@
 # mdbook-satysfi
 
+[![crates.io][crates-badge]][crates]
 [![Build Status][ci-badge]][ci]
 [![source badge][source-badge]][source]
 [![license badge][license-badge]][license]
 
+[crates]: https://crates.io/crates/mdbook-satysfi
+[crates-badge]: https://img.shields.io/crates/v/mdbook-satysfi
 [ci]: https://github.com/puripuri2100/mdbook-satysfi/actions?query=workflow%3ARust%20CI
 [ci-badge]: https://github.com/puripuri2100/mdbook-satysfi/workflows/Rust%20CI/badge.svg?branch=master
 [source]: https://github.com/puripuri2100/mdbook-satysfi
