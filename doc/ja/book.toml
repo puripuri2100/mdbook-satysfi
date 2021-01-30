@@ -14,3 +14,5 @@ git-repository-url = "https://github.com/puripuri2100/mdbook-satysfi"
 git-repository-icon = "fa-github"
 site-url = "https://puripuri2100.github.io/mdbook-satysfi/ja/book/"
 mathjax-support = true
+
+[output.satysfi]

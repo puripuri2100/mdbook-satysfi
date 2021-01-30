@@ -8,8 +8,15 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    container:
+      image: amutake/satysfi:0.0.5-83-g360d941
     steps:
       - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
@@ -17,11 +24,20 @@ jobs:
           mdbook-version: '0.4.6'
 
       - run: |
+          cargo install mdbook-satysfi
           cd doc/ja
           mdbook build
+          opam update
+          opam install satysfi-class-mdbook-satysfi
+          satyrographos install
+          satysfi book/satysfi/main.saty -o book/satysfi/ja.pdf
+          cd ../..
+          mkdir -p pages/ja
+          cp -r -f doc/ja/book/html/* pages/ja
+          cp -f doc/ja/book/satysfi/ja.pdf pages/ja
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./doc
+          publish_dir: ./pages
