@@ -293,16 +293,26 @@ fn node_to_satysfi_code(
                           }
                           AttributeType::Int => Ok(format!(
                             r#"(Some({}))"#,
-                            attribute_value.parse::<isize>().unwrap()
+                            attribute_value.parse::<isize>().with_context(|| format!(
+                              "This value is not int: {}",
+                              attribute_value
+                            ))?
                           )),
                           AttributeType::Bool => Ok(format!(
                             r#"(Some({}))"#,
-                            attribute_value.parse::<bool>().unwrap()
+                            attribute_value.parse::<bool>().with_context(|| format!(
+                              "This value is not bool: {}",
+                              attribute_value
+                            ))?
                           )),
                           AttributeType::Link => {
                             let link = format!(
                               "{}/{}",
-                              ch_file_path.parent().unwrap().to_str().unwrap(),
+                              ch_file_path
+                                .parent()
+                                .with_context(|| "Cannot parent file path")?
+                                .to_str()
+                                .with_context(|| "Cannot stringify file path")?,
                               &attribute_value
                             );
                             Ok(format!(r#"(Some({}))"#, make_code(false, &link)))
@@ -322,15 +332,26 @@ fn node_to_satysfi_code(
                           }
                           AttributeType::Int => Ok(format!(
                             r#"({})"#,
-                            attribute_value.parse::<isize>().unwrap()
+                            attribute_value.parse::<isize>().with_context(|| format!(
+                              "This value is not int: {}",
+                              attribute_value
+                            ))?
                           )),
-                          AttributeType::Bool => {
-                            Ok(format!(r#"({})"#, attribute_value.parse::<bool>().unwrap()))
-                          }
+                          AttributeType::Bool => Ok(format!(
+                            r#"({})"#,
+                            attribute_value.parse::<bool>().with_context(|| format!(
+                              "This value is not bool: {}",
+                              attribute_value
+                            ))?
+                          )),
                           AttributeType::Link => {
                             let link = format!(
                               "{}/{}",
-                              ch_file_path.parent().unwrap().to_str().unwrap(),
+                              ch_file_path
+                                .parent()
+                                .with_context(|| "Cannot parent file path")?
+                                .to_str()
+                                .with_context(|| "Cannot stringify file path")?,
                               &attribute_value
                             );
                             Ok(format!(r#"({})"#, make_code(false, &link)))
