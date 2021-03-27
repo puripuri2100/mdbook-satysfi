@@ -722,6 +722,7 @@ pub fn escape_inline_text(text: &str) -> String {
     .replace("|", "\\|")
     .replace("*", "\\*")
     .replace("@", "\\@")
+    .replace("`", "\\`")
 }
 
 fn make_code(is_block: bool, code_str: &str) -> String {
