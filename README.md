@@ -115,8 +115,8 @@ Then delete the `[output.satysfi]` configuration in `book.toml`:
     - See <https://opam.ocaml.org/doc/Install.html>.
 - OCaml 4.11.0 (installed by opam)
 - [Satyrographos](https://github.com/na4zagin3/satyrographos)
-- [SATySFi](https://github.com/gfngfn/SATySFi) 0.0.5 (installed by Satyrographos)
-- [satysfi-class-mdbook-satysfi](https://github.com/puripuri2100/satysfi-class-mdbook-satysfi) 0.2.0 (installed by Satyrographos)
+- [SATySFi](https://github.com/gfngfn/SATySFi) >= "0.0.5" (installed by Satyrographos)
+- [satysfi-class-mdbook-satysfi](https://github.com/puripuri2100/satysfi-class-mdbook-satysfi) >= "0.3.0" (installed by Satyrographos)
 
 Please run:
 
