@@ -248,7 +248,7 @@ fn node_to_satysfi_code(
               }
             },
           };
-          let attributes_str = attribute_cfg_lst
+          let attributes_str_opt = attribute_cfg_lst
             .iter()
             .map(|toml| {
               let attribute_name_opt = toml.get("name").map(|v| v.as_str()).flatten();
@@ -263,136 +263,133 @@ fn node_to_satysfi_code(
                     let attribute_value_opt = attributes.get(attribute_name).unwrap_or(&None);
                     match attribute_type {
                       AttributeTypeOrOption::Option(_) => match attribute_value_opt {
-                        None => Ok(String::new()),
+                        None => Some(String::new()),
                         Some(attribute_value) => {
-                          Ok(format!(r#" {}="{}""#, attribute_name, attribute_value))
+                          Some(format!(r#" {}="{}""#, attribute_name, attribute_value))
                         }
                       },
-                      AttributeTypeOrOption::Normal(_) => attribute_value_opt
-                        .clone()
-                        .map(|attribute_value| {
+                      AttributeTypeOrOption::Normal(_) => {
+                        attribute_value_opt.clone().map(|attribute_value| {
                           format!(r#" {}="{}""#, attribute_name, attribute_value)
                         })
-                        .with_context(|| format!("Cannot get a value: {}", attribute_name)),
+                      }
                     }
                   }
                   _ => {
                     let attribute_value_opt = attributes.get(attribute_name).unwrap_or(&None);
                     match attribute_type {
                       AttributeTypeOrOption::Option(attribute_type) => match attribute_value_opt {
-                        None => Ok("(None)".to_string()),
+                        None => Some("(None)".to_string()),
                         Some(attribute_value) => match attribute_type {
                           AttributeType::BlockText => {
-                            Ok(format!(r#"(Some('<{}>))"#, attribute_value))
+                            Some(format!(r#"(Some('<{}>))"#, attribute_value))
                           }
                           AttributeType::InlineText => {
-                            Ok(format!(r#"(Some({{{}}}))"#, attribute_value))
+                            Some(format!(r#"(Some({{{}}}))"#, attribute_value))
                           }
                           AttributeType::String => {
-                            Ok(format!(r#"(Some({}))"#, make_code(false, attribute_value)))
+                            Some(format!(r#"(Some({}))"#, make_code(false, attribute_value)))
                           }
-                          AttributeType::Int => Ok(format!(
-                            r#"(Some({}))"#,
-                            attribute_value.parse::<isize>().with_context(|| format!(
-                              "This value is not int: {}",
-                              attribute_value
-                            ))?
-                          )),
-                          AttributeType::Bool => Ok(format!(
-                            r#"(Some({}))"#,
-                            attribute_value.parse::<bool>().with_context(|| format!(
-                              "This value is not bool: {}",
-                              attribute_value
-                            ))?
-                          )),
-                          AttributeType::Link => {
-                            let link = format!(
-                              "{}/{}",
-                              ch_file_path
-                                .parent()
-                                .with_context(|| "Cannot parent file path")?
-                                .to_str()
-                                .with_context(|| "Cannot stringify file path")?,
-                              &attribute_value
-                            );
-                            Ok(format!(r#"(Some({}))"#, make_code(false, &link)))
-                          }
+                          AttributeType::Int => attribute_value
+                            .parse::<isize>()
+                            .ok()
+                            .map(|isize| format!(r#"(Some({}))"#, isize)),
+                          AttributeType::Bool => attribute_value
+                            .parse::<bool>()
+                            .ok()
+                            .map(|bool| format!(r#"(Some({}))"#, bool)),
+                          AttributeType::Link => ch_file_path
+                            .parent()
+                            .map(|path| path.to_str())
+                            .flatten()
+                            .map(|path| {
+                              format!(
+                                r#"(Some({}))"#,
+                                make_code(false, &format!("{}/{}", path, &attribute_value))
+                              )
+                            }),
                         },
                       },
                       AttributeTypeOrOption::Normal(attribute_type) => match attribute_value_opt {
                         None => {
-                          eprintln!(r#""{}" tag is not supported"#, tag_name);
-                          Ok(String::new())
+                          eprintln!(r#"Not enough attributes required: "{}""#, tag_name);
+                          None
                         }
                         Some(attribute_value) => match attribute_type {
-                          AttributeType::BlockText => Ok(format!(r#"('<{}>)"#, attribute_value)),
-                          AttributeType::InlineText => Ok(format!(r#"({{{}}})"#, attribute_value)),
+                          AttributeType::BlockText => Some(format!(r#"('<{}>)"#, attribute_value)),
+                          AttributeType::InlineText => {
+                            Some(format!(r#"({{{}}})"#, attribute_value))
+                          }
                           AttributeType::String => {
-                            Ok(format!(r#"({})"#, make_code(false, &attribute_value)))
+                            Some(format!(r#"({})"#, make_code(false, &attribute_value)))
                           }
-                          AttributeType::Int => Ok(format!(
-                            r#"({})"#,
-                            attribute_value.parse::<isize>().with_context(|| format!(
-                              "This value is not int: {}",
-                              attribute_value
-                            ))?
-                          )),
-                          AttributeType::Bool => Ok(format!(
-                            r#"({})"#,
-                            attribute_value.parse::<bool>().with_context(|| format!(
-                              "This value is not bool: {}",
-                              attribute_value
-                            ))?
-                          )),
-                          AttributeType::Link => {
-                            let link = format!(
-                              "{}/{}",
-                              ch_file_path
-                                .parent()
-                                .with_context(|| "Cannot parent file path")?
-                                .to_str()
-                                .with_context(|| "Cannot stringify file path")?,
-                              &attribute_value
-                            );
-                            Ok(format!(r#"({})"#, make_code(false, &link)))
-                          }
+                          AttributeType::Int => attribute_value
+                            .parse::<isize>()
+                            .ok()
+                            .map(|isize| format!(r#"({})"#, isize)),
+                          AttributeType::Bool => attribute_value
+                            .parse::<bool>()
+                            .ok()
+                            .map(|bool| format!(r#"({})"#, bool)),
+                          AttributeType::Link => ch_file_path
+                            .parent()
+                            .map(|path| path.to_str())
+                            .flatten()
+                            .map(|path| {
+                              format!(
+                                r#"({})"#,
+                                make_code(false, &format!("{}/{}", path, &attribute_value))
+                              )
+                            }),
                         },
                       },
                     }
                   }
                 },
-                _ => Ok(String::new()),
+                _ => Some(String::new()),
               }
             })
-            .collect::<Result<String>>();
+            .collect::<Option<String>>();
           match mode {
             Mode::Block => {
-              let indent_str = "  ".repeat(indent);
-              let s = format!(
-                "\n{indent}+{command_name}{attributes_str}{children_str}",
-                indent = indent_str,
-                command_name = command_name,
-                attributes_str = attributes_str?,
-                children_str = children_str
-              );
+              let s = if let Some(attributes_str) = attributes_str_opt {
+                let indent_str = "  ".repeat(indent);
+                format!(
+                  "\n{indent}+{command_name}{attributes_str}{children_str}",
+                  indent = indent_str,
+                  command_name = command_name,
+                  attributes_str = attributes_str,
+                  children_str = children_str
+                )
+              } else {
+                String::new()
+              };
               Ok(s)
             }
             Mode::Inline => {
-              let s = format!(
-                " \\{command_name}{attributes_str}{children_str} ",
-                command_name = command_name,
-                attributes_str = attributes_str?,
-                children_str = children_str
-              );
+              let s = if let Some(attributes_str) = attributes_str_opt {
+                format!(
+                  " \\{command_name}{attributes_str}{children_str} ",
+                  command_name = command_name,
+                  attributes_str = attributes_str,
+                  children_str = children_str
+                )
+              } else {
+                String::new()
+              };
               Ok(s)
             }
             Mode::Code => {
-              let s = format!(
-                "<{tag_name}{attributes_str}>{children_str}</{tag_name}>",
-                tag_name = tag_name,
-                attributes_str = attributes_str?,
-                children_str = children_str
-              );
+              let s = if let Some(attributes_str) = attributes_str_opt {
+                format!(
+                  "<{tag_name}{attributes_str}>{children_str}</{tag_name}>",
+                  tag_name = tag_name,
+                  attributes_str = attributes_str,
+                  children_str = children_str
+                )
+              } else {
+                String::new()
+              };
               Ok(s)
             }
           }
@@ -457,6 +454,21 @@ fn check_html_to_satysfi_code_4() {
     "\n    +code-block(`\n\\{{#include file.rs}}\n`);".to_string(),
     html_to_satysfi_code(
       r#"<div class="code-block">\{{#include file.rs}}</div>"#,
+      Mode::Block,
+      &path::PathBuf::from("ch1/hoge.md"),
+      &map::Map::new(),
+      &path::PathBuf::from("ch1/hoge.md")
+    )
+    .unwrap_or_default()
+  )
+}
+
+#[test]
+fn check_break_html_to_satysfi_code() {
+  assert_eq!(
+    "".to_string(),
+    html_to_satysfi_code(
+      r#"<img src="path"/>"#,
       Mode::Block,
       &path::PathBuf::from("ch1/hoge.md"),
       &map::Map::new(),
