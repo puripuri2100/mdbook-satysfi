@@ -2,7 +2,7 @@
 authors = ["Naoki Kaneko <puripuri2100@gmail.com>"]
 edition = "2018"
 name = "mdbook-satysfi"
-version = "0.0.1"
+version = "0.0.2"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/puripuri2100/mdbook-satysfi"
