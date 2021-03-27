@@ -1,6 +1,6 @@
 use anyhow::Result;
 use pulldown_cmark::{html, Event, Options, Parser, Tag};
-use std::path;
+use std::path::Path;
 use toml::map;
 
 pub mod html2satysfi;
@@ -8,8 +8,8 @@ mod mdbook_specific_features;
 
 pub fn md_to_satysfi_code(
   md_text: String,
-  file_path: &path::PathBuf,
-  ch_file_path: &path::PathBuf,
+  file_path: &Path,
+  ch_file_path: &Path,
   html_cfg: &map::Map<String, toml::Value>,
 ) -> Result<String> {
   let mut options = Options::empty();

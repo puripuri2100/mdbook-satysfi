@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use regex::Regex;
 use std::fs;
 use std::path;
+use std::path::Path;
 
 // parse mdBook-specific features
 // https://rust-lang.github.io/mdBook/format/mdbook.html
@@ -32,7 +33,7 @@ enum StrWithAnchor {
   Str(String),
 }
 
-pub fn parse_include_file(text: &str, file_path: &path::PathBuf) -> Result<String> {
+pub fn parse_include_file(text: &str, file_path: &Path) -> Result<String> {
   let text_type_list = parse_include_file_to_text_type_list(text);
   text_type_list
     .iter()
@@ -189,7 +190,7 @@ fn parse_text_type_opt(chars: &[char], pos: usize) -> Option<(TextType, usize)> 
       }
     }
     Some(c) if c.is_ascii_alphabetic() || *c == '_' || *c == '-' => {
-      let (range_name, new_pos) = parse_digit_name(chars, pos)?;
+      let (range_name, new_pos) = parse_digit_name(chars, pos);
       pos = new_pos;
       range_opt = Some(FileRange::Name(range_name))
     }
@@ -232,7 +233,7 @@ fn parse_digit_range(chars: &[char], pos: usize) -> Option<(usize, usize)> {
   Some((u, pos))
 }
 
-fn parse_digit_name(chars: &[char], pos: usize) -> Option<(String, usize)> {
+fn parse_digit_name(chars: &[char], pos: usize) -> (String, usize) {
   let mut pos = pos;
   let mut str = String::new();
   while pos < chars.len() {
@@ -244,7 +245,7 @@ fn parse_digit_name(chars: &[char], pos: usize) -> Option<(String, usize)> {
       break;
     }
   }
-  Some((str, pos))
+  (str, pos)
 }
 
 #[test]
@@ -427,7 +428,7 @@ fn check_parse_include_file_12() {
   )
 }
 
-fn text_type_to_string(text_type: &TextType, file_path: &path::PathBuf) -> Result<String> {
+fn text_type_to_string(text_type: &TextType, file_path: &Path) -> Result<String> {
   let s = match text_type {
     TextType::Text(str) => str.to_string(),
     TextType::Include(link_type) => {

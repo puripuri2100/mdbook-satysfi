@@ -3,7 +3,7 @@ use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Write};
-use std::path;
+use std::path::Path;
 use toml::map;
 
 mod copy;
@@ -157,7 +157,7 @@ document (|
 fn write_bookitme(
   f: &mut BufWriter<File>,
   item: &BookItem,
-  root: &path::PathBuf,
+  root: &Path,
   html_cfg: &map::Map<String, toml::Value>,
 ) -> Result<()> {
   let indent_str = "  ".to_string();

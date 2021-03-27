@@ -1,7 +1,7 @@
 use super::mdbook_specific_features;
 use anyhow::{Context, Result};
 use html_parser::{Dom, Node};
-use std::path;
+use std::path::Path;
 use toml::map;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -14,9 +14,9 @@ pub enum Mode {
 pub fn html_to_satysfi_code(
   html_code: &str,
   mode: Mode,
-  file_path: &path::PathBuf,
+  file_path: &Path,
   html_cfg: &map::Map<String, toml::Value>,
-  ch_file_path: &path::PathBuf,
+  ch_file_path: &Path,
 ) -> Result<String> {
   let html = Dom::parse(html_code).with_context(|| "Missing Parse HTML tag")?;
   let node_lst = html.children;
@@ -30,9 +30,9 @@ pub fn html_to_satysfi_code(
 fn node_to_satysfi_code(
   node: &Node,
   mode: Mode,
-  file_path: &path::PathBuf,
+  file_path: &Path,
   html_cfg: &map::Map<String, toml::Value>,
-  ch_file_path: &path::PathBuf,
+  ch_file_path: &Path,
   indent: usize,
 ) -> Result<String> {
   match node {
@@ -410,9 +410,9 @@ fn check_html_to_satysfi_code_1() {
     html_to_satysfi_code(
       r#"<p> this is a image. <code>let p = `<p>x</p>`</code></p>"#,
       Mode::Block,
-      &path::PathBuf::from("ch1/hoge.md"),
+      &Path::new("ch1/hoge.md"),
       &map::Map::new(),
-      &path::PathBuf::from("ch1/hoge.md"),
+      &Path::new("ch1/hoge.md"),
     )
     .unwrap_or_default()
   )
@@ -425,9 +425,9 @@ fn check_html_to_satysfi_code_2() {
     html_to_satysfi_code(
       r#"<p> this is a image.<code>let p = `<p>x</p>`</code></p>"#,
       Mode::Inline,
-      &path::PathBuf::from("ch1/hoge.md"),
+      &Path::new("ch1/hoge.md"),
       &map::Map::new(),
-      &path::PathBuf::from("ch1/hoge.md")
+      &Path::new("ch1/hoge.md")
     )
     .unwrap_or_default()
   )
@@ -440,9 +440,9 @@ fn check_html_to_satysfi_code_3() {
     html_to_satysfi_code(
       r#"<ruby>如何<rp>(</rp><rt>いか</rt><rp>)</rp></ruby>"#,
       Mode::Inline,
-      &path::PathBuf::from("ch1/hoge.md"),
+      &Path::new("ch1/hoge.md"),
       &map::Map::new(),
-      &path::PathBuf::from("ch1/hoge.md")
+      &Path::new("ch1/hoge.md")
     )
     .unwrap_or_default()
   )
@@ -455,9 +455,9 @@ fn check_html_to_satysfi_code_4() {
     html_to_satysfi_code(
       r#"<div class="code-block">\{{#include file.rs}}</div>"#,
       Mode::Block,
-      &path::PathBuf::from("ch1/hoge.md"),
+      &Path::new("ch1/hoge.md"),
       &map::Map::new(),
-      &path::PathBuf::from("ch1/hoge.md")
+      &Path::new("ch1/hoge.md")
     )
     .unwrap_or_default()
   )
@@ -470,9 +470,9 @@ fn check_break_html_to_satysfi_code() {
     html_to_satysfi_code(
       r#"<img src="path"/>"#,
       Mode::Block,
-      &path::PathBuf::from("ch1/hoge.md"),
+      &Path::new("ch1/hoge.md"),
       &map::Map::new(),
-      &path::PathBuf::from("ch1/hoge.md")
+      &Path::new("ch1/hoge.md")
     )
     .unwrap_or_default()
   )

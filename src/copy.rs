@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
 use std::fs;
-use std::path::PathBuf;
+use std::path::Path;
 
 pub fn copy_files_except_ext(
-  from: &PathBuf,
-  to: &PathBuf,
-  avoid_dir: Option<&PathBuf>,
+  from: &Path,
+  to: &Path,
+  avoid_dir: Option<&Path>,
   ignore_ext_lst: &[&str],
 ) -> Result<()> {
   if from != to {
@@ -35,9 +35,9 @@ pub fn copy_files_except_ext(
       } else if metadata.is_dir() {
         let b = match avoid_dir {
           None => true,
-          Some(avoid) => &entry.path() != avoid,
+          Some(avoid) => entry.path() != *avoid,
         };
-        if (&entry.path() != to) && b {
+        if (entry.path() != *to) && b {
           if let Ok(()) = fs::create_dir(&to.join(entry.file_name())) {};
           copy_files_except_ext(
             &from.join(entry.file_name()),
