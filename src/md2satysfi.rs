@@ -12,6 +12,19 @@ pub fn md_to_satysfi_code(
   ch_file_path: &Path,
   html_cfg: &map::Map<String, toml::Value>,
 ) -> Result<String> {
+  let html_code = md2html(md_text);
+  let satysfi_code = html2satysfi::html_to_satysfi_code(
+    &html_code,
+    html2satysfi::Mode::Block,
+    file_path,
+    html_cfg,
+    ch_file_path,
+  )?;
+  Ok(satysfi_code)
+}
+
+fn md2html(md_text: String) -> String {
+  let mut html_code = String::new();
   let mut options = Options::empty();
   options.insert(Options::ENABLE_TABLES);
   options.insert(Options::ENABLE_FOOTNOTES);
@@ -45,14 +58,24 @@ pub fn md_to_satysfi_code(
     Event::End(Tag::List(Some(_))) => Event::Html(r#"</ol>"#.into()),
     _ => event,
   });
-  let mut html_code = String::new();
   html::push_html(&mut html_code, parser);
-  let satysfi_code = html2satysfi::html_to_satysfi_code(
-    &html_code,
-    html2satysfi::Mode::Block,
-    file_path,
-    html_cfg,
-    ch_file_path,
-  )?;
-  Ok(satysfi_code)
+  html_code
+}
+
+
+#[test]
+fn check_md_to_html_1() {
+  assert_eq!(
+    md2html(
+      r#"
+# sec1
+## sec2
+text `code` text
+soft break  
+hard break"#
+        .to_string()
+    ),
+    "<h1>sec1</h1>\n<h2>sec2</h2>\n<p>text <code>code</code> text soft break<br />\nhard break</p>\n"
+      .to_string()
+  )
 }
