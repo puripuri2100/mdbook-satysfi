@@ -336,10 +336,14 @@ fn node_to_satysfi_code(
                             .map(|path| path.to_str())
                             .flatten()
                             .map(|path| {
-                              format!(
-                                r#"({})"#,
-                                make_code(false, &format!("{}/{}", path, &attribute_value))
-                              )
+                              if tag_name == "img" {
+                                String::new()
+                              } else {
+                                format!(
+                                  r#"({})"#,
+                                  make_code(false, &format!("{}/{}", path, &attribute_value))
+                                )
+                              }
                             }),
                         },
                       },
