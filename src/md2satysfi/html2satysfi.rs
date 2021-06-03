@@ -3,6 +3,8 @@ use anyhow::{Context, Result};
 use html_parser::{Dom, Node};
 use std::path::Path;
 use toml::map;
+use latex2mathml;
+use latex2mathml::DisplayStyle;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Mode {
@@ -38,12 +40,12 @@ fn node_to_satysfi_code(
   match node {
     Node::Comment(_) => Ok(String::new()),
     Node::Text(str) => match mode {
-      Mode::Inline => Ok(escape_inline_text(
+      Mode::Inline => Ok(set_inline_text(
         &mdbook_specific_features::parse_include_file(str, file_path)?,
       )),
       Mode::Block => Ok(format!(
         "+p{{{}}}",
-        escape_inline_text(&mdbook_specific_features::parse_include_file(
+        set_inline_text(&mdbook_specific_features::parse_include_file(
           str, file_path
         )?)
       )),
@@ -705,7 +707,7 @@ pub fn escape_code(text: &str) -> String {
     .replace("&quot;", "\"")
 }
 
-pub fn escape_inline_text(text: &str) -> String {
+fn escape_inline_text(text: &str) -> String {
   text
     .replace("\\", "\\\\")
     .replace("&amp;", "&")
@@ -724,6 +726,12 @@ pub fn escape_inline_text(text: &str) -> String {
     .replace("@", "\\@")
     .replace("`", "\\`")
 }
+
+pub fn set_inline_text(text: &str) -> String {
+  // textとmathjax部分に分離させ、textにはescapeを、mathjax部分には解析と変換をかける
+  escape_inline_text(text)
+}
+
 
 fn make_code(is_block: bool, code_str: &str) -> String {
   let i = count_accent_in_inline_text(code_str);

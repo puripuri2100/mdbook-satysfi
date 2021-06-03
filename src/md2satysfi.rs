@@ -62,7 +62,6 @@ fn md2html(md_text: String) -> String {
   html_code
 }
 
-
 #[test]
 fn check_md_to_html_1() {
   assert_eq!(
