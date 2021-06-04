@@ -75,13 +75,13 @@ fn main() -> Result<()> {
     .get("class-file-name")
     .map(|v| v.as_str())
     .flatten()
-    .unwrap_or_else(|| "class-mdbook-satysfi/mdbook-satysfi");
+    .unwrap_or("class-mdbook-satysfi/mdbook-satysfi");
 
   let is_class_file_require = &satysfi_cfg
     .get("is-class-file-require")
     .map(|v| v.as_bool())
     .flatten()
-    .unwrap_or_else(|| true);
+    .unwrap_or(true);
   let class_file_import_type = if *is_class_file_require {
     "require"
   } else {
