@@ -71,6 +71,23 @@ fn main() -> Result<()> {
     }
   };
 
+  let class_file_name = &satysfi_cfg
+    .get("class-file-name")
+    .map(|v| v.as_str())
+    .flatten()
+    .unwrap_or_else(|| "class-mdbook-satysfi/mdbook-satysfi");
+
+  let is_class_file_require = &satysfi_cfg
+    .get("is-class-file-require")
+    .map(|v| v.as_bool())
+    .flatten()
+    .unwrap_or_else(|| true);
+  let class_file_import_type = if *is_class_file_require {
+    "require"
+  } else {
+    "import"
+  };
+
   let require_packages_str = &satysfi_cfg
     .get("require-packages")
     .map(|v| {
@@ -124,7 +141,7 @@ fn main() -> Result<()> {
 
   f.write_all(
     format!(
-      "@require: class-mdbook-satysfi/mdbook-satysfi
+      "@{class_file_import_type}: {class_file_name}
 {require_packages}
 {import_packages}
 
@@ -135,6 +152,8 @@ document (|
   description = ({description_opt});
   language = ({language_opt});
 |) '<",
+      class_file_import_type = class_file_import_type,
+      class_file_name = class_file_name,
       require_packages = require_packages_str,
       import_packages = import_packages_str,
       title = title,
