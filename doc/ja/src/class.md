@@ -41,7 +41,7 @@ mdbook-satysfiによって出力されたファイルを処理するためのク
 - `\footnote: [string]`：脚注を出力します。引数はkeyです。
 - `+add-footnote: [string; inline-text]`：脚注の中身を登録します。一つ目の引数はkeyで、二つ目の引数が中身です。
 - `+rule: []`：線を出力します。
-- `\task-list-marker: [bool]`：`true`のときはチェック印付きの□を出力し、`false`のときは□を出力します。`\item`コマンドの引数内に書かれます。
+- `\task-list-marker: [bool]`：`true`のときはチェック印付きの四角を出力し、`false`のときは空の四角を出力します。`\item`コマンドの引数内に書かれます。
 - `\item: [inline-text]`：箇条書きの際に使用します。
 - `\lisgint: [inline-text list]`：箇条書きです。
 - `+lisgint: [inline-text list]`：箇条書きです。
