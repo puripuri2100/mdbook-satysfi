@@ -100,7 +100,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li><li class="chapter-item expanded "><a href="class.html"><strong aria-hidden="true">4.</strong> クラスファイルを自作する</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -191,7 +191,7 @@
 <p>mdbook-satysfiはMITライセンスのもと公開されています。</p>
 <h1><a class="header" href="#読み込むパッケージを指定する" id="読み込むパッケージを指定する">読み込むパッケージを指定する</a></h1>
 <p>book.tomlに以下のような内容を加えることで読み込むパッケージを追加することができます。</p>
-<p>クラスファイルを指定すれば上書きすることも可能です。</p>
+<p><code>div</code>タグや<code>span</code>タグで独自のタグを作るときに、それに対応するコマンドを用意したいときに便利です。</p>
 <pre><code>[output.satysfi]
 require-packages = [&quot;base/int&quot;]
 import-packages = [&quot;local&quot;]
@@ -216,6 +216,7 @@ import-packages = [&quot;local&quot;]
         type = &quot;inline&quot;
 </code></pre>
 <p><code>[output.satysfi.html.&lt;tag-name&gt;]</code>とすることで、そのタグが実際に書かれていた場合にその下に書いた設定が適用されます。</p>
+<p><code>div</code>タグと<code>span</code>タグの場合は<code>class</code>で指定した名前が使われます。</p>
 <p><code>command_name</code>はコマンドを出力する際にどうするかを設定します。デフォルトはタグ名です。</p>
 <p><code>children_type</code>は子要素がどうなるかを表しています。書かないと子要素は無視されます。
 与えられるのは</p>
@@ -243,6 +244,66 @@ import-packages = [&quot;local&quot;]
 </ul>
 <p>とそれぞれの<code>option</code>です。</p>
 <p><code>link</code>とは相対パスのことで、画像タグの処理などに使うことを想定しています。与えられた相対パスをその原稿の書かれたmdファイルのパスと結合してSATySFiファイルに書き出します。</p>
+<h1><a class="header" href="#クラスファイルを自作する" id="クラスファイルを自作する">クラスファイルを自作する</a></h1>
+<p>mdbook-satysfiによって出力されたファイルを処理するためのクラスファイルを自作することができます。</p>
+<h2><a class="header" href="#必要なコマンドなど" id="必要なコマンドなど">必要なコマンドなど</a></h2>
+<pre><code>(|
+  title : inline-text;
+  authors : inline-text list;
+  description : inline-text option;
+  language : string option;
+|)
+</code></pre>
+<p>というレコード型を一つ目の引数に、<code>block-text</code>を二つ目の引数に持ち、<code>document</code>型を返す、<code>document</code>という名前の関数を提供する必要があります。</p>
+<p><code>language</code>フィールドに入力される値は<code>Some(`ja`)</code>や<code>Some(`en`)</code>といったものです。</p>
+<p>実装する必要があるコマンドは以下の通りです。</p>
+<ul>
+<li><code>+Chapter: [(int list) option; int; inline-text; block-text]</code>：章を表すコマンドです。引数はそれぞれ「何番目の章の子や孫になっているのか」・「深さ」・「タイトル」・「中身」です。</li>
+<li><code>+PartTitle: [inline-text]</code>：目次に出力する部の分け目です。引数はタイトルです。</li>
+<li><code>+Separator: []</code>：目次に出力するラインを表します。引数はありません。</li>
+<li><code>\strong: [inline-text]</code>：強調を表します。</li>
+<li><code>\emph: [inline-text]</code>：強調を表します。</li>
+<li><code>\strike: [inline-text]</code>：打ち消し線を表します。</li>
+<li><code>+block-quote: [block-text]</code>：引用を表します。</li>
+<li><code>\block-quote: [block-text]</code>：引用を表します。</li>
+<li><code>+heading: [int; inline-text]</code>：節のタイトルを表します。一つ目の引数は深さです。</li>
+<li><code>+p: [inline-text]</code>：段落を表します。</li>
+<li><code>\p: [inline-text]</code>：段落を表します。</li>
+<li><code>+code: [string]</code>：インラインコードを表します。</li>
+<li><code>\code: [string]</code>：インラインコードを表します。</li>
+<li><code>+code-block: [string]</code>：ブロックコードを表します。</li>
+<li><code>\code-block: [string]</code>：ブロックコードを表します。</li>
+<li><code>\href: [string; inline-text]</code>：リンクを表します。</li>
+<li><code>+img: [string; inline-text]</code>：画像挿入を表します。二つ目の引数はキャプションです。</li>
+<li><code>\img: [string; inline-text]</code>：画像挿入を表します。二つ目の引数はキャプションです。</li>
+<li><code>\footnote: [string]</code>：脚注を出力します。引数はkeyです。</li>
+<li><code>+add-footnote: [string; inline-text]</code>：脚注の中身を登録します。一つ目の引数はkeyで、二つ目の引数が中身です。</li>
+<li><code>+rule: []</code>：線を出力します。</li>
+<li><code>\task-list-marker: [bool]</code>：<code>true</code>のときはチェック印付きの□を出力し、<code>false</code>のときは□を出力します。<code>\item</code>コマンドの引数内に書かれます。</li>
+<li><code>\item: [inline-text]</code>：箇条書きの際に使用します。</li>
+<li><code>\lisgint: [inline-text list]</code>：箇条書きです。</li>
+<li><code>+lisgint: [inline-text list]</code>：箇条書きです。</li>
+<li><code>\enumerate: [int; inline-text list]</code>：数字付きの箇条書きです。一つ目の引数は「数字がどこから始まるか」を表します。</li>
+<li><code>+enumerate: [int; inline-text list]</code>：数字付きの箇条書きです。一つ目の引数は「数字がどこから始まるか」を表します。</li>
+<li><code>+table: [block-text]</code>：表を出力します。</li>
+<li><code>+thead: [block-text]</code>：表のヘッダーです。</li>
+<li><code>+tbody: [block-text]</code>：表の本体です。</li>
+<li><code>+tr: [inline-text list]</code>：表の横方向を指定します。</li>
+<li><code>\th: [string option; inline-text]</code>：ヘッダーの中で表の一セルを表すコマンドです。一つ目の引数は位置を表します。中央ぞろえの時は<code>Some(`center`)</code>・左揃えの時は<code>Some(`left`)</code>・右揃えの時は<code>Some(`right`)</code>が与えられます。</li>
+<li><code>\td: [string option; inline-text]</code>：<code>\th</code>のボディ版です。</li>
+</ul>
+<h2><a class="header" href="#その他のコマンドについて" id="その他のコマンドについて">その他のコマンドについて</a></h2>
+<p>mdbook-satysfiはマークダウンをHTMLに変換してからSATySFiコードに変換をする形を取っています。そのため、原理的にはHTMLタグ全てに対応するコマンドが必要です。ですが、それらに対応するかどうかはクラスファイル作成者に任されます。</p>
+<p>また、<code>div</code>タグと<code>span</code>タグでは<code>class</code>で指定した名前がコマンド名として使われる仕様なため、それらが使用されているマークダウンファイルを処理したい場合はそれに対応するコマンドを実装する必要があるかもしれません。</p>
+<h1><a class="header" href="#クラスファイルの変更の仕方" id="クラスファイルの変更の仕方">クラスファイルの変更の仕方</a></h1>
+<p><code>[output.satysfi]</code>以下に</p>
+<pre><code class="language-toml">class-file-name = &quot;class-file-folder/class-file-name&quot;
+is-class-file-require = true
+</code></pre>
+<p>のように記述します。</p>
+<p><code>class-file-name</code>にはクラスファイルの名前を文字列型で入力します。<code>class-file-name</code>フィールドが無い、もしくは文字列型ではない場合は<code>class-mdbook-satysfi/mdbook-satysfi</code>が使用されます。</p>
+<p><code>is-class-file-require</code>には「クラスファイルの読み込みが<code>@require</code>かどうか」を真偽値で入力します。<code>true</code>の場合は<code>@require</code>で読み込まれ、<code>false</code>の場合は<code>@import</code>で読み込まれます。
+デフォルト値は<code>true</code>です。</p>
 
                     </main>
 

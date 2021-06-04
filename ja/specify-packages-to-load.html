@@ -98,7 +98,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html" class="active"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html" class="active"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li><li class="chapter-item expanded "><a href="class.html"><strong aria-hidden="true">4.</strong> クラスファイルを自作する</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#読み込むパッケージを指定する" id="読み込むパッケージを指定する">読み込むパッケージを指定する</a></h1>
 <p>book.tomlに以下のような内容を加えることで読み込むパッケージを追加することができます。</p>
-<p>クラスファイルを指定すれば上書きすることも可能です。</p>
+<p><code>div</code>タグや<code>span</code>タグで独自のタグを作るときに、それに対応するコマンドを用意したいときに便利です。</p>
 <pre><code>[output.satysfi]
 require-packages = [&quot;base/int&quot;]
 import-packages = [&quot;local&quot;]
