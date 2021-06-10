@@ -100,7 +100,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li><li class="chapter-item expanded "><a href="class.html"><strong aria-hidden="true">4.</strong> クラスファイルを自作する</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li><li class="chapter-item expanded "><a href="class.html"><strong aria-hidden="true">4.</strong> クラスファイルを自作する</a></li><li class="chapter-item expanded "><a href="run-satysfi.html"><strong aria-hidden="true">5.</strong> SATySFiを呼び出す</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -304,6 +304,30 @@ is-class-file-require = true
 <p><code>class-file-name</code>にはクラスファイルの名前を文字列型で入力します。<code>class-file-name</code>フィールドが無い、もしくは文字列型ではない場合は<code>class-mdbook-satysfi/mdbook-satysfi</code>が使用されます。</p>
 <p><code>is-class-file-require</code>には「クラスファイルの読み込みが<code>@require</code>かどうか」を真偽値で入力します。<code>true</code>の場合は<code>@require</code>で読み込まれ、<code>false</code>の場合は<code>@import</code>で読み込まれます。
 デフォルト値は<code>true</code>です。</p>
+<h1><a class="header" href="#satysfiを呼び出す" id="satysfiを呼び出す">SATySFiを呼び出す</a></h1>
+<p><code>[output.satysfi]</code>テーブルの中に<code>pdf = true</code>というコードを入れると、自動でSATySFiが呼び出され、出力したsatyファイルがコンパイルされてPDFファイルが生成されます。</p>
+<p>デフォルトでは<code>pdf = false</code>で、SATySFiは呼び出されません。</p>
+<h2><a class="header" href="#高度な設定" id="高度な設定">高度な設定</a></h2>
+<pre><code class="language-toml">[output.satysfi]
+  [output.satysfi.pdf]
+    # 各種設定
+</code></pre>
+<p>とすることで高度な設定を行うことができます。</p>
+<p>設定の中で使うことのできるフィールドと内容です：</p>
+<ul>
+<li><code>is-bytecomp</code>：真偽値を与えます。<code>--bytecomp</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-type-check-only</code>：真偽値を与えます。<code>--type-check-only</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-debug-show-bbox</code>：真偽値を与えます。<code>--debug-show-bbox</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-debug-show-space</code>：真偽値を与えます。<code>--debug-show-space</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-debug-show-block-bbox</code>：真偽値を与えます。<code>--debug-show-block-bbox</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-debug-show-block-space</code>：真偽値を与えます。<code>--debug-show-block-space</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-debug-show-overfull</code>：真偽値を与えます。<code>--debug-debug-show-overfull</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-full-path</code>：真偽値を与えます。<code>--full-path</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-show-fonts</code>：真偽値を与えます。<code>--show-fonts</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>is-no-default-config</code>：真偽値を与えます。<code>--no-default-config</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
+<li><code>config-path</code>：<code>--config</code>オプションに与える文字列を与えます。絶対pathに変換された後に<code>--config</code>オプションに与えられます。デフォルトではオプションそのものが与えられません。</li>
+<li><code>page-number-limit</code>：数値を与えます。<code>--page-number-limit</code>オプションに与える数値です。デフォルトではオプションそのものが与えられません。</li>
+</ul>
 
                     </main>
 
