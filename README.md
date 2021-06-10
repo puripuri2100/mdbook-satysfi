@@ -139,6 +139,8 @@ Add the `pdf = true` configure in `[output.satysfi]` table:
 + pdf = true
 ```
 
+**note** : SATySFi does not support image formats other than JPEG. So if you are using a format other than JPEG, please replace it *manually*.
+
 
 ## Primary Dependencies
 
