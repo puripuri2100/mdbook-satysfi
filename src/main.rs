@@ -237,6 +237,7 @@ document (|
     .iter()
     .for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg));
   f.write_all(b">\n").unwrap();
+  f.flush().unwrap();
   if let Some(pdf_cfg) = pdf_cfg_opt {
     let msg = run_satysfi::run_satysfi(destination, pdf_cfg);
     println!("{}", String::from_utf8(msg).unwrap())
