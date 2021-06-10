@@ -44,7 +44,8 @@ pub fn run_satysfi(
         .with_context(|| "cannot join file name")?,
       output_file_name
     );
-    args.push(format!("--output {}", path))
+    args.push("--output".to_string());
+    args.push(path);
   };
   if let Some(config_path) = config.get("config-path").map(|v| v.as_str()).flatten() {
     let paths = config_path.split(',').map(|s| s.trim()).collect::<Vec<_>>();
@@ -58,7 +59,8 @@ pub fn run_satysfi(
         path
       ))
     }
-    args.push(format!("--config {}", paths_str))
+    args.push("--config".to_string());
+    args.push(paths_str);
   };
   if let Some(is_no_default_config) = config
     .get("is-no-default-config")
@@ -74,14 +76,16 @@ pub fn run_satysfi(
     .map(|v| v.as_integer())
     .flatten()
   {
-    args.push(format!("--page-number-limit {}", page_number_limit))
+    args.push("--page-number-limit".to_string());
+    args.push(page_number_limit.to_string());
   };
   if let Some(text_mode_configs) = config
     .get("text-mode-configs")
     .map(|v| v.as_str())
     .flatten()
   {
-    args.push(format!("--text-mode {}", text_mode_configs))
+    args.push("--text-mode".to_string());
+    args.push(text_mode_configs.to_string());
   };
   if let Some(is_debug_show_bbox) = config
     .get("is-debug-show-bbox")
