@@ -139,6 +139,15 @@ Add the `pdf = true` configure in `[output.satysfi]` table:
 + pdf = true
 ```
 
+or
+
+Please run :
+
+```
+satysfi book/satysfi/main.saty
+```
+
+
 **note** : SATySFi does not support image formats other than JPEG. So if you are using a format other than JPEG, please replace it *manually*.
 
 
