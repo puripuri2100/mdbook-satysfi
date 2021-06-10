@@ -8,6 +8,7 @@ use toml::map;
 
 mod copy;
 mod md2satysfi;
+mod run_satysfi;
 
 fn main() -> Result<()> {
   let stdin = io::stdin();
@@ -43,6 +44,21 @@ fn main() -> Result<()> {
   {
     None => map::Map::new(),
     Some(map) => (*map).clone(),
+  };
+  let pdf_toml_value_opt = &cfg.get("output.satysfi.pdf");
+  let pdf_cfg_opt = match (
+    pdf_toml_value_opt.map(|v| v.as_bool()).flatten(),
+    pdf_toml_value_opt.map(|v| v.as_table()).flatten(),
+  ) {
+    (_, Some(t)) => Some(t.clone()),
+    (Some(b), _) => {
+      if b {
+        Some(map::Map::new())
+      } else {
+        None
+      }
+    }
+    _ => None,
   };
 
   let title = md2satysfi::html2satysfi::escape_inline_text(&book.clone().title.unwrap_or_default());
@@ -170,6 +186,11 @@ document (|
     .try_for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg))?;
 
   f.write_all(b"\n>\n")?;
+  f.flush()?;
+  if let Some(pdf_cfg) = pdf_cfg_opt {
+    let msg = run_satysfi::run_satysfi(destination, pdf_cfg)?;
+    println!("{}", String::from_utf8(msg)?)
+  }
   Ok(())
 }
 
