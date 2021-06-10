@@ -118,10 +118,25 @@ Then delete the `[output.satysfi]` configuration in `book.toml`:
 - [SATySFi](https://github.com/gfngfn/SATySFi) >= "0.0.5" (installed by Satyrographos)
 - [satysfi-class-mdbook-satysfi](https://github.com/puripuri2100/satysfi-class-mdbook-satysfi) >= "0.3.0" (installed by Satyrographos)
 
-Please run:
+
+To install opam, satyrographos and SATySFi, see [this link](https://github.com/gfngfn/SATySFi#install-using-satyrographos-for-non-devs).
+
+To install `satysfi-class-mdbook-satysfi`, run the following command :
 
 ```sh
-satysfi book/satysfi/main.saty
+opam update
+opam install satysfi-class-mdbook-satysfi
+satyrographos install
+```
+
+
+### Build
+
+Add the `pdf = true` configure in `[output.satysfi]` table:
+
+```diff
+[output.satysfi]
++ pdf = true
 ```
 
 
