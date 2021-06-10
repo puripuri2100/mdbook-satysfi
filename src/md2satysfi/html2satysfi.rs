@@ -1,5 +1,7 @@
+use super::mdbook_specific_features;
+use anyhow::{Context, Result};
 use html_parser::{Dom, Node};
-use std::path;
+use std::path::Path;
 use toml::map;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -12,31 +14,53 @@ pub enum Mode {
 pub fn html_to_satysfi_code(
   html_code: &str,
   mode: Mode,
+  file_path: &Path,
   html_cfg: &map::Map<String, toml::Value>,
-  ch_file_path: &path::PathBuf,
-) -> String {
-  let node_lst = Dom::parse(html_code).unwrap().children;
-  node_lst
+  ch_file_path: &Path,
+) -> Result<String> {
+  let html = Dom::parse(html_code).with_context(|| "Missing Parse HTML tag")?;
+  let node_lst = html.children;
+  let s = node_lst
     .iter()
-    .map(|node| node_to_satysfi_code(node, mode, html_cfg, ch_file_path))
-    .collect()
+    .map(|node| node_to_satysfi_code(node, mode, file_path, html_cfg, ch_file_path, 2))
+    .collect();
+  s
 }
 
 fn node_to_satysfi_code(
   node: &Node,
   mode: Mode,
+  file_path: &Path,
   html_cfg: &map::Map<String, toml::Value>,
-  ch_file_path: &path::PathBuf,
-) -> String {
+  ch_file_path: &Path,
+  indent: usize,
+) -> Result<String> {
   match node {
-    Node::Comment(_) => String::new(),
+    Node::Comment(_) => Ok(String::new()),
     Node::Text(str) => match mode {
-      Mode::Inline => escape_inline_text(str),
-      Mode::Block => format!("+p{{{}}}", escape_inline_text(str)),
-      Mode::Code => str.to_string(),
+      Mode::Inline => Ok(escape_inline_text(
+        &mdbook_specific_features::parse_include_file(str, file_path)?,
+      )),
+      Mode::Block => Ok(format!(
+        "+p{{{}}}",
+        escape_inline_text(&mdbook_specific_features::parse_include_file(
+          str, file_path
+        )?)
+      )),
+      Mode::Code => Ok(str.to_string()),
     },
     Node::Element(element) => {
-      let tag_name = &element.name.to_lowercase();
+      let tag_name =
+        if element.name.to_lowercase() == *"div" || element.name.to_lowercase() == *"span" {
+          element
+            .classes
+            .get(0)
+            .unwrap_or(&element.name.to_lowercase())
+            .clone()
+        } else {
+          element.name.to_lowercase()
+        };
+      let tag_name = &tag_name;
       let children = &element.children;
       let attributes = &element.attributes;
       let default_cfg = make_default_config();
@@ -67,23 +91,54 @@ fn node_to_satysfi_code(
                 let children_str = children
                   .iter()
                   .map(|node| match mode {
-                    Mode::Code => node_to_satysfi_code(node, Mode::Code, html_cfg, ch_file_path),
-                    _ => node_to_satysfi_code(node, Mode::Block, html_cfg, ch_file_path),
+                    Mode::Code => node_to_satysfi_code(
+                      node,
+                      Mode::Code,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    ),
+                    _ => node_to_satysfi_code(
+                      node,
+                      Mode::Block,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    ),
                   })
-                  .collect::<String>();
+                  .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("<{}>", children_str),
+                  _ => {
+                    let indent_str = "  ".repeat(indent);
+                    format!("<{}\n{}>", children_str, indent_str)
+                  }
                 }
               }
               ChildrenType::InlineText => {
                 let children_str = children
                   .iter()
                   .map(|node| match mode {
-                    Mode::Code => node_to_satysfi_code(node, Mode::Code, html_cfg, ch_file_path),
-                    _ => node_to_satysfi_code(node, Mode::Inline, html_cfg, ch_file_path),
+                    Mode::Code => node_to_satysfi_code(
+                      node,
+                      Mode::Code,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    ),
+                    _ => node_to_satysfi_code(
+                      node,
+                      Mode::Inline,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    ),
                   })
-                  .collect::<String>();
+                  .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
                   _ => format!("{{{}}}", children_str),
@@ -92,26 +147,108 @@ fn node_to_satysfi_code(
               ChildrenType::BlockCode => {
                 let children_str = children
                   .iter()
-                  .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg, ch_file_path))
-                  .collect::<String>();
+                  .map(|node| {
+                    node_to_satysfi_code(
+                      node,
+                      Mode::Code,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    )
+                  })
+                  .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("({});", make_code(true, &children_str)),
+                  _ => format!("({});", make_code(true, &escape_code(&children_str))),
                 }
               }
               ChildrenType::InlineCode => {
                 let children_str = children
                   .iter()
-                  .map(|node| node_to_satysfi_code(node, Mode::Code, html_cfg, ch_file_path))
-                  .collect::<String>();
+                  .map(|node| {
+                    node_to_satysfi_code(
+                      node,
+                      Mode::Code,
+                      file_path,
+                      html_cfg,
+                      ch_file_path,
+                      indent + 1,
+                    )
+                  })
+                  .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("({});", make_code(false, &children_str)),
+                  _ => format!("({});", &make_code(false, &escape_code(&children_str))),
+                }
+              }
+              ChildrenType::BlockList => {
+                let children_iter = children.iter().map(|node| match mode {
+                  Mode::Code => node_to_satysfi_code(
+                    node,
+                    Mode::Code,
+                    file_path,
+                    html_cfg,
+                    ch_file_path,
+                    indent + 1,
+                  ),
+                  _ => node_to_satysfi_code(
+                    node,
+                    Mode::Block,
+                    file_path,
+                    html_cfg,
+                    ch_file_path,
+                    indent + 1,
+                  ),
+                });
+                let indent_str = "  ".repeat(indent + 1);
+                let mut children_str = String::new();
+                for children_value in children_iter {
+                  children_str.push_str(&format!("\n{}('<{}>);", indent_str, children_value?))
+                }
+                match mode {
+                  Mode::Code => children_str,
+                  _ => {
+                    let indent_str = "  ".repeat(indent);
+                    format!("[{}\n{}];", children_str, indent_str)
+                  }
+                }
+              }
+              ChildrenType::InlineList => {
+                let children_iter = children.iter().map(|node| match mode {
+                  Mode::Code => node_to_satysfi_code(
+                    node,
+                    Mode::Code,
+                    file_path,
+                    html_cfg,
+                    ch_file_path,
+                    indent + 1,
+                  ),
+                  _ => node_to_satysfi_code(
+                    node,
+                    Mode::Inline,
+                    file_path,
+                    html_cfg,
+                    ch_file_path,
+                    indent + 1,
+                  ),
+                });
+                let indent_str = "  ".repeat(indent + 1);
+                let mut children_str = String::new();
+                for children_value in children_iter {
+                  children_str.push_str(&format!("\n{}({{{}}});", indent_str, children_value?))
+                }
+                match mode {
+                  Mode::Code => children_str,
+                  _ => {
+                    let indent_str = "  ".repeat(indent);
+                    format!("[{}\n{}];", children_str, indent_str)
+                  }
                 }
               }
             },
           };
-          let attributes_str = attribute_cfg_lst
+          let attributes_str_opt = attribute_cfg_lst
             .iter()
             .map(|toml| {
               let attribute_name_opt = toml.get("name").map(|v| v.as_str()).flatten();
@@ -126,14 +263,15 @@ fn node_to_satysfi_code(
                     let attribute_value_opt = attributes.get(attribute_name).unwrap_or(&None);
                     match attribute_type {
                       AttributeTypeOrOption::Option(_) => match attribute_value_opt {
-                        None => String::new(),
+                        None => Some(String::new()),
                         Some(attribute_value) => {
-                          format!(r#" {}="{}""#, attribute_name, attribute_value)
+                          Some(format!(r#" {}="{}""#, attribute_name, attribute_value))
                         }
                       },
                       AttributeTypeOrOption::Normal(_) => {
-                        let attribute_value = attribute_value_opt.clone().unwrap();
-                        format!(r#" {}="{}""#, attribute_name, attribute_value)
+                        attribute_value_opt.clone().map(|attribute_value| {
+                          format!(r#" {}="{}""#, attribute_name, attribute_value)
+                        })
                       }
                     }
                   }
@@ -141,87 +279,128 @@ fn node_to_satysfi_code(
                     let attribute_value_opt = attributes.get(attribute_name).unwrap_or(&None);
                     match attribute_type {
                       AttributeTypeOrOption::Option(attribute_type) => match attribute_value_opt {
-                        None => "(None)".to_string(),
+                        None => Some("(None)".to_string()),
                         Some(attribute_value) => match attribute_type {
-                          AttributeType::BlockText => format!(r#"(Some('<{}>))"#, attribute_value),
+                          AttributeType::BlockText => {
+                            Some(format!(r#"(Some('<{}>))"#, attribute_value))
+                          }
                           AttributeType::InlineText => {
-                            format!(r#"(Some({{{}}}))"#, attribute_value)
+                            Some(format!(r#"(Some({{{}}}))"#, attribute_value))
                           }
                           AttributeType::String => {
-                            format!(r#"(Some({}))"#, make_code(false, attribute_value))
+                            Some(format!(r#"(Some({}))"#, make_code(false, attribute_value)))
                           }
-                          AttributeType::Link => {
-                            let link = format!(
-                              "{}/{}",
-                              ch_file_path.parent().unwrap().to_str().unwrap(),
-                              &attribute_value
-                            );
-                            format!(r#"(Some({}))"#, make_code(false, &link))
-                          }
+                          AttributeType::Int => attribute_value
+                            .parse::<isize>()
+                            .ok()
+                            .map(|isize| format!(r#"(Some({}))"#, isize)),
+                          AttributeType::Bool => attribute_value
+                            .parse::<bool>()
+                            .ok()
+                            .map(|bool| format!(r#"(Some({}))"#, bool)),
+                          AttributeType::Link => ch_file_path
+                            .parent()
+                            .map(|path| path.to_str())
+                            .flatten()
+                            .map(|path| {
+                              format!(
+                                r#"(Some({}))"#,
+                                make_code(false, &format!("{}/{}", path, &attribute_value))
+                              )
+                            }),
                         },
                       },
                       AttributeTypeOrOption::Normal(attribute_type) => match attribute_value_opt {
                         None => {
-                          eprintln!(r#""{}" tag is not supported"#, tag_name);
-                          String::new()
+                          eprintln!(r#"Not enough attributes required: "{}""#, tag_name);
+                          None
                         }
                         Some(attribute_value) => match attribute_type {
-                          AttributeType::BlockText => {
-                            format!(r#"('<{}>)"#, attribute_value)
-                          }
+                          AttributeType::BlockText => Some(format!(r#"('<{}>)"#, attribute_value)),
                           AttributeType::InlineText => {
-                            format!(r#"({{{}}})"#, attribute_value)
+                            Some(format!(r#"({{{}}})"#, attribute_value))
                           }
                           AttributeType::String => {
-                            format!(r#"({})"#, make_code(false, &attribute_value))
+                            Some(format!(r#"({})"#, make_code(false, &attribute_value)))
                           }
-                          AttributeType::Link => {
-                            let link = format!(
-                              "{}/{}",
-                              ch_file_path.parent().unwrap().to_str().unwrap(),
-                              &attribute_value
-                            );
-                            format!(r#"({})"#, make_code(false, &link))
-                          }
+                          AttributeType::Int => attribute_value
+                            .parse::<isize>()
+                            .ok()
+                            .map(|isize| format!(r#"({})"#, isize)),
+                          AttributeType::Bool => attribute_value
+                            .parse::<bool>()
+                            .ok()
+                            .map(|bool| format!(r#"({})"#, bool)),
+                          AttributeType::Link => ch_file_path
+                            .parent()
+                            .map(|path| path.to_str())
+                            .flatten()
+                            .map(|path| {
+                              if tag_name == "img" {
+                                String::new()
+                              } else {
+                                format!(
+                                  r#"({})"#,
+                                  make_code(false, &format!("{}/{}", path, &attribute_value))
+                                )
+                              }
+                            }),
                         },
                       },
                     }
                   }
                 },
-                _ => String::new(),
+                _ => Some(String::new()),
               }
             })
-            .collect::<String>();
+            .collect::<Option<String>>();
           match mode {
             Mode::Block => {
-              format!(
-                "+{command_name}{attributes_str}{children_str}",
-                command_name = command_name,
-                attributes_str = attributes_str,
-                children_str = children_str
-              )
+              let s = if let Some(attributes_str) = attributes_str_opt {
+                let indent_str = "  ".repeat(indent);
+                format!(
+                  "\n{indent}+{command_name}{attributes_str}{children_str}",
+                  indent = indent_str,
+                  command_name = command_name,
+                  attributes_str = attributes_str,
+                  children_str = children_str
+                )
+              } else {
+                String::new()
+              };
+              Ok(s)
             }
             Mode::Inline => {
-              format!(
-                "\\{command_name}{attributes_str}{children_str}",
-                command_name = command_name,
-                attributes_str = attributes_str,
-                children_str = children_str
-              )
+              let s = if let Some(attributes_str) = attributes_str_opt {
+                format!(
+                  " \\{command_name}{attributes_str}{children_str} ",
+                  command_name = command_name,
+                  attributes_str = attributes_str,
+                  children_str = children_str
+                )
+              } else {
+                String::new()
+              };
+              Ok(s)
             }
             Mode::Code => {
-              format!(
-                "<{tag_name}{attributes_str}>{children_str}</{tag_name}>",
-                tag_name = tag_name,
-                attributes_str = attributes_str,
-                children_str = children_str
-              )
+              let s = if let Some(attributes_str) = attributes_str_opt {
+                format!(
+                  "<{tag_name}{attributes_str}>{children_str}</{tag_name}>",
+                  tag_name = tag_name,
+                  attributes_str = attributes_str,
+                  children_str = children_str
+                )
+              } else {
+                String::new()
+              };
+              Ok(s)
             }
           }
         }
         None => {
           eprintln!(r#""{}" tag is not supported"#, tag_name);
-          String::new()
+          Ok(String::new())
         }
       }
     }
@@ -231,41 +410,75 @@ fn node_to_satysfi_code(
 #[test]
 fn check_html_to_satysfi_code_1() {
   assert_eq!(
-    r#"+p{this is a image.\img(` ch1/../img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#
-      .to_owned(),
+    "\n    +p{this is a image. \\code(`` let p = `<p>x</p>` ``); }".to_owned(),
     html_to_satysfi_code(
-      r#"<p> this is a image. <img src="../img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
+      r#"<p> this is a image. <code>let p = `<p>x</p>`</code></p>"#,
       Mode::Block,
+      &Path::new("ch1/hoge.md"),
       &map::Map::new(),
-      &path::PathBuf::from("ch1/hoge.md"),
+      &Path::new("ch1/hoge.md"),
     )
+    .unwrap_or_default()
   )
 }
 
 #[test]
 fn check_html_to_satysfi_code_2() {
   assert_eq!(
-    r#"\p{this is a image.\img(` ch1/../img/14-03.jpg `);\code(`` let p = `<p>x</p>` ``);}"#
-      .to_owned(),
+    r#" \p{this is a image. \code(`` let p = `<p>x</p>` ``); } "#.to_owned(),
     html_to_satysfi_code(
-      r#"<p> this is a image. <img src="../img/14-03.jpg" class="center" /> <code>let p = `<p>x</p>`</code></p>"#,
+      r#"<p> this is a image.<code>let p = `<p>x</p>`</code></p>"#,
       Mode::Inline,
+      &Path::new("ch1/hoge.md"),
       &map::Map::new(),
-      &path::PathBuf::from("ch1/hoge.md")
+      &Path::new("ch1/hoge.md")
     )
+    .unwrap_or_default()
   )
 }
 
 #[test]
 fn check_html_to_satysfi_code_3() {
   assert_eq!(
-    r#"\ruby{如何\rp{(}\rt{いか}\rp{)}}"#.to_string(),
+    r#" \ruby{如何 \rp{(}  \rt{いか}  \rp{)} } "#.to_string(),
     html_to_satysfi_code(
       r#"<ruby>如何<rp>(</rp><rt>いか</rt><rp>)</rp></ruby>"#,
       Mode::Inline,
+      &Path::new("ch1/hoge.md"),
       &map::Map::new(),
-      &path::PathBuf::from("ch1/hoge.md")
+      &Path::new("ch1/hoge.md")
     )
+    .unwrap_or_default()
+  )
+}
+
+#[test]
+fn check_html_to_satysfi_code_4() {
+  assert_eq!(
+    "\n    +code-block(`\n\\{{#include file.rs}}\n`);".to_string(),
+    html_to_satysfi_code(
+      r#"<div class="code-block">\{{#include file.rs}}</div>"#,
+      Mode::Block,
+      &Path::new("ch1/hoge.md"),
+      &map::Map::new(),
+      &Path::new("ch1/hoge.md")
+    )
+    .unwrap_or_default()
+  )
+}
+
+#[test]
+fn check_break_html_to_satysfi_code() {
+  assert_eq!(
+    "".to_string(),
+    html_to_satysfi_code(
+      r#"<img src="path"/>"#,
+      Mode::Block,
+      &Path::new("ch1/hoge.md"),
+      &map::Map::new(),
+      &Path::new("ch1/hoge.md")
+    )
+    .unwrap_or_default()
   )
 }
 
@@ -275,6 +488,8 @@ enum ChildrenType {
   InlineText,
   BlockCode,
   InlineCode,
+  BlockList,
+  InlineList,
 }
 
 fn parse_children_type(type_str: &str) -> Option<ChildrenType> {
@@ -283,6 +498,10 @@ fn parse_children_type(type_str: &str) -> Option<ChildrenType> {
     "block" => Some(ChildrenType::BlockText),
     "inline-text" => Some(ChildrenType::InlineText),
     "block-text" => Some(ChildrenType::BlockText),
+    "inline list" => Some(ChildrenType::InlineList),
+    "block list" => Some(ChildrenType::BlockList),
+    "inline-text list" => Some(ChildrenType::InlineList),
+    "block-text list" => Some(ChildrenType::BlockList),
     "inline code" => Some(ChildrenType::InlineCode),
     "block code" => Some(ChildrenType::BlockCode),
     _ => None,
@@ -295,6 +514,8 @@ enum AttributeType {
   BlockText,
   Link,
   String,
+  Int,
+  Bool,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash)]
@@ -317,6 +538,10 @@ fn parse_attribute_type(type_str: &str) -> Option<AttributeTypeOrOption> {
     "link option" => Some(AttributeTypeOrOption::Option(AttributeType::Link)),
     "string" => Some(AttributeTypeOrOption::Normal(AttributeType::String)),
     "string option" => Some(AttributeTypeOrOption::Option(AttributeType::String)),
+    "int" => Some(AttributeTypeOrOption::Normal(AttributeType::Int)),
+    "int option" => Some(AttributeTypeOrOption::Option(AttributeType::Int)),
+    "bool" => Some(AttributeTypeOrOption::Normal(AttributeType::Bool)),
+    "bool option" => Some(AttributeTypeOrOption::Option(AttributeType::Bool)),
     _ => None,
   }
 }
@@ -328,6 +553,72 @@ const DEFAULT_HTML_CONFIG: &str = r#"
 [code]
   command_name="code"
   children_type="inline code"
+[blockquote]
+  command_name="block-quote"
+  children_type="block"
+[em]
+  command_name="emph"
+  children_type="inline"
+[strong]
+  command_name="strong"
+  children_type="inline"
+[hr]
+  command_name="rule"
+[ul]
+  command_name="listing"
+  children_type="inline list"
+[ol]
+  command_name="enumerate"
+  children_type="inline list"
+  [[ol.attribute]]
+  "name" = "start"
+  "type" = "int"
+[li]
+  command_name="item"
+  children_type="inline"
+[h1]
+  command_name="heading(1)"
+  children_type="inline"
+[h2]
+  command_name="heading(2)"
+  children_type="inline"
+[h3]
+  command_name="heading(3)"
+  children_type="inline"
+[h4]
+  command_name="heading(4)"
+  children_type="inline"
+[h5]
+  command_name="heading(5)"
+  children_type="inline"
+[h6]
+  command_name="heading(6)"
+  children_type="inline"
+[code-block]
+  command_name="code-block"
+  children_type="block code"
+[a]
+  command_name="href"
+  children_type="inline"
+  [[a.attribute]]
+  "name" = "href"
+  "type" = "string"
+[task-list-marker]
+  command_name="task-list-marker"
+  [[task-list-marker.attribute]]
+  "name" = "checked"
+  "type" = "bool"
+[footnote-reference]
+  command_name="footnote"
+  [[footnote-reference.attribute]]
+  "name" = "tag"
+  "type" = "string"
+[footnote-definition]
+  command_name="add-footnote"
+  children_type="inline"
+  [[footnote-definition.attribute]]
+  "name" = "tag"
+  "type" = "string"
 [ruby]
   command_name="ruby"
   children_type="inline"
@@ -337,11 +628,68 @@ const DEFAULT_HTML_CONFIG: &str = r#"
 [rt]
   command_name="rt"
   children_type="inline"
+[sup]
+  command_name="sup"
+  children_type="inline"
+[sub]
+  command_name="sub"
+  children_type="inline"
+[small]
+  command_name="small"
+  children_type="inline"
+[s]
+  command_name="stroke"
+  children_type="inline"
+[cite]
+  command_name="cite"
+  children_type="inline"
+[q]
+  command_name="q"
+  children_type="inline"
+[dfn]
+  command_name="dfn"
+  children_type="inline"
+[abbr]
+  command_name="abbr"
+  children_type="inline"
+  [[abbr.attribute]]
+  "name" = "title"
+  "type" = "inline option"
 [img]
   command_name="img"
   [[img.attribute]]
-    "name" = "src"
-    "type" = "link"
+  "name" = "src"
+  "type" = "link"
+  [[img.attribute]]
+  "name" = "alt"
+  "type" = "inline"
+[del]
+  command_name="strike"
+  children_type="inline"
+[table]
+  command_name="table"
+  children_type="block"
+[thead]
+  command_name="thead"
+  children_type="block"
+[tbody]
+  command_name="tbody"
+  children_type="block list"
+[tr]
+  command_name="tr"
+  children_type="inline list"
+[th]
+  command_name="th"
+  children_type="inline"
+  [[th.attribute]]
+  "name" = "align"
+  "type" = "string option"
+[td]
+  command_name="td"
+  children_type="inline"
+  [[td.attribute]]
+  "name" = "align"
+  "type" = "string option"
 "#;
 
 fn make_default_config() -> map::Map<String, toml::Value> {
@@ -353,9 +701,20 @@ fn make_default_config() -> map::Map<String, toml::Value> {
     .clone()
 }
 
-fn escape_inline_text(text: &str) -> String {
+pub fn escape_code(text: &str) -> String {
+  text
+    .replace("&amp;", "&")
+    .replace("&lt;", "<")
+    .replace("&gt;", ">")
+    .replace("&quot;", "\"")
+}
+
+pub fn escape_inline_text(text: &str) -> String {
   text
     .replace("\\", "\\\\")
+    .replace("&amp;", "&")
+    .replace("&lt;", "<")
+    .replace("&gt;", ">")
     .replace("{", "\\{")
     .replace("}", "\\}")
     .replace("<", "\\<")
@@ -367,11 +726,13 @@ fn escape_inline_text(text: &str) -> String {
     .replace("|", "\\|")
     .replace("*", "\\*")
     .replace("@", "\\@")
+    .replace("`", "\\`")
 }
 
-fn make_code(is_block: bool, code: &str) -> String {
-  let i = count_accent_in_inline_text(code);
+fn make_code(is_block: bool, code_str: &str) -> String {
+  let i = count_accent_in_inline_text(code_str);
   let raw = "`".repeat(i + 1);
+  let code = mdbook_specific_features::hiding_code_lines(&code_str);
   if is_block {
     format!("{raw}\n{code}\n{raw}", code = code, raw = raw)
   } else {
@@ -379,7 +740,7 @@ fn make_code(is_block: bool, code: &str) -> String {
   }
 }
 
-fn count_accent_in_inline_text(text: &str) -> usize {
+pub fn count_accent_in_inline_text(text: &str) -> usize {
   let chars: Vec<char> = text.chars().collect();
   let mut count = 0;
   let mut n = 0;
@@ -395,4 +756,14 @@ fn count_accent_in_inline_text(text: &str) -> usize {
     count = n;
   }
   count
+}
+
+#[test]
+fn check_count_accent_in_inline_text() {
+  assert_eq!(3, count_accent_in_inline_text("aa``bb```c``d`"))
+}
+
+#[test]
+fn check_count_accent_in_inline_text2() {
+  assert_eq!(1, count_accent_in_inline_text("`"))
 }

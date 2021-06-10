@@ -1,32 +1,31 @@
-extern crate mdbook;
-extern crate pulldown_cmark;
-
+use anyhow::{Context, Result};
 use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Write};
-use std::path;
+use std::path::Path;
 use toml::map;
 
 mod copy;
 mod md2satysfi;
 mod run_satysfi;
 
-fn main() {
+fn main() -> Result<()> {
   let stdin = io::stdin();
   let mut stdin = BufReader::new(stdin);
-  let ctx = RenderContext::from_json(&mut stdin).unwrap();
+  let ctx = RenderContext::from_json(&mut stdin)?;
 
   let destination = &ctx.destination;
   let _ = fs::create_dir_all(&destination);
-  let f = File::create(&destination.join("main.saty")).unwrap();
+  let f =
+    File::create(&destination.join("main.saty")).with_context(|| "Cannot make 'main.saty'")?;
   let mut f = BufWriter::new(f);
 
   let root = &ctx.source_dir();
 
   let src_dir = &ctx.root.join(&ctx.config.book.src);
   let build_dir = &ctx.root.join(&ctx.config.build.build_dir);
-  copy::copy_files_except_ext(src_dir, &destination, Some(build_dir), &["md"]);
+  copy::copy_files_except_ext(src_dir, &destination, Some(build_dir), &["md"])?;
 
   let cfg = &ctx.config;
   let book = &cfg.book;
@@ -62,22 +61,48 @@ fn main() {
     _ => None,
   };
 
-  let title = &book.clone().title.unwrap_or_default();
-  let authors = &book.authors;
-  let len = authors.len();
-  let author = authors
+  let title = md2satysfi::html2satysfi::escape_inline_text(&book.clone().title.unwrap_or_default());
+  let authors = &book.clone().authors;
+  let authors = authors
     .iter()
-    .enumerate()
-    .map(|(i, s)| {
-      if i == 0 {
-        s.to_string()
-      } else if i == len - 1 {
-        format!("and {}", s)
-      } else {
-        format!(", {}", s)
-      }
-    })
+    .map(|s| format!("{{{}}}; ", md2satysfi::html2satysfi::escape_inline_text(s)))
     .collect::<String>();
+  let description_opt_str = match book.clone().description {
+    None => "None".to_string(),
+    Some(description) => format!(
+      "Some({{{}}})",
+      md2satysfi::html2satysfi::escape_inline_text(&description)
+    ),
+  };
+  let language_opt_str = match book.clone().language {
+    None => "None".to_string(),
+    Some(language) => {
+      let n = md2satysfi::html2satysfi::count_accent_in_inline_text(&language);
+      let raw = "`".repeat(n + 1);
+      format!(
+        "Some({raw} {language} {raw})",
+        raw = raw,
+        language = language
+      )
+    }
+  };
+
+  let class_file_name = &satysfi_cfg
+    .get("class-file-name")
+    .map(|v| v.as_str())
+    .flatten()
+    .unwrap_or("class-mdbook-satysfi/mdbook-satysfi");
+
+  let is_class_file_require = &satysfi_cfg
+    .get("is-class-file-require")
+    .map(|v| v.as_bool())
+    .flatten()
+    .unwrap_or(true);
+  let class_file_import_type = if *is_class_file_require {
+    "require"
+  } else {
+    "import"
+  };
 
   let require_packages_str = &satysfi_cfg
     .get("require-packages")
@@ -132,165 +157,101 @@ fn main() {
 
   f.write_all(
     format!(
-      "@require: stdjabook
-@require: annot
-@require: itemize
-@require: code
-@require: vdecoset
-@require: easytable/easytable
+      "@{class_file_import_type}: {class_file_name}
 {require_packages}
 {import_packages}
 
 
-open EasyTableAlias
-
-
-let add-fil ib = ib ++ inline-fil
-
-let-block ctx +Chapter title bt =
-  let title-ib = read-inline ctx title in
-  let title-bb = line-break true false ctx (add-fil title-ib) in
-  let main-bb = read-block ctx bt in
-  main-bb
-
-
-let-block ctx +heading n title =
-  let font-size =
-    match n with
-    | 1 -> 25pt
-    | 2 -> 20pt
-    | 3 -> 18pt
-    | _ -> 15pt
-  in
-  let ctx =
-    ctx
-    |> set-font-size font-size
-    |> set-font Kana           (`ipaexg`    , 0.88, 0.)
-    |> set-font HanIdeographic (`ipaexg`    , 0.88, 0.)
-    |> set-font Latin          (`lmsans`    , 1.0 , 0.)
-  in
-  title
-  |> read-inline ctx
-  |> add-fil
-  |> line-break true false ctx
-
-
-let-block ctx +block-quote bt =
-  let space = (20pt, 0pt, 0pt, 0pt) in
-  let deco = VDecoSet.empty in
-  block-frame-breakable ctx space deco (fun ctx -> read-block ctx bt)
-
-
-let-block ctx +Separator = block-nil
-
-
-let-block ctx +PartTitle title =
-  let font-size = 25pt in
-  let ctx =
-    ctx
-    |> set-font-size font-size
-    |> set-font Kana           (`ipaexg`    , 0.88, 0.)
-    |> set-font HanIdeographic (`ipaexg`    , 0.88, 0.)
-    |> set-font Latin          (`lmsans`    , 1.0 , 0.)
-  in
-  title
-  |> read-inline ctx
-  |> add-fil
-  |> line-break true false ctx
-
-
-let-inline ctx \\strong it =
-  let ctx =
-    ctx
-    |> set-font Kana           (`ipaexg`    , 0.88, 0.)
-    |> set-font HanIdeographic (`ipaexg`    , 0.88, 0.)
-    |> set-font Latin          (`lmsans`    , 1.0 , 0.)
-  in
-  read-inline ctx it
-
-
-let-inline ctx \\img path title =
-  let image = load-image path in
-  let insert-image = use-image-by-width image 100mm in
-  insert-image
-
-
-in
-
 document (|
   title = {{{title}}};
-  author = {{{author}}};
-  show-toc = false;
-  show-title = false;
+  authors = [{authors}];
+  description = ({description_opt});
+  language = ({language_opt});
 |) '<",
+      class_file_import_type = class_file_import_type,
+      class_file_name = class_file_name,
       require_packages = require_packages_str,
       import_packages = import_packages_str,
       title = title,
-      author = author
+      authors = authors,
+      description_opt = description_opt_str,
+      language_opt = language_opt_str,
     )
     .as_bytes(),
-  )
-  .unwrap();
+  )?;
 
   ctx
     .book
     .iter()
-    .for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg));
-  f.write_all(b">\n").unwrap();
+    .try_for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg))?;
+
+  f.write_all(b"\n>\n")?;
   f.flush().unwrap();
   if let Some(pdf_cfg) = pdf_cfg_opt {
     let msg = run_satysfi::run_satysfi(destination, pdf_cfg);
     println!("{}", String::from_utf8(msg).unwrap())
   }
+  Ok(())
 }
 
 fn write_bookitme(
   f: &mut BufWriter<File>,
   item: &BookItem,
-  root: &path::PathBuf,
+  root: &Path,
   html_cfg: &map::Map<String, toml::Value>,
-) {
+) -> Result<()> {
   let indent_str = "  ".to_string();
   match item {
     BookItem::Chapter(ch) => {
       let ch_name = ch.clone().name;
+      let parent_names = ch.clone().parent_names;
+      let depth = parent_names.len();
+      let numbers_opt = ch.clone().number;
+      let numbers_str = match numbers_opt {
+        None => "None".to_string(),
+        Some(numbers) => {
+          let mut s = String::new();
+          for n in numbers.iter() {
+            s.push_str(&format!("{};", n))
+          }
+          format!("Some([{}])", s)
+        }
+      };
       f.write_all(
         format!(
-          "{indent}+Chapter{{{name}}} <\n",
+          "\n\n{indent}+Chapter ({numbers}) ({depth}) {{{name}}} <",
           indent = indent_str,
-          name = md2satysfi::escape_inline_text(&ch_name)
+          numbers = numbers_str,
+          depth = depth,
+          name = md2satysfi::html2satysfi::escape_inline_text(&ch_name)
         )
         .as_bytes(),
-      )
-      .unwrap();
+      )?;
       let ch_file_path_opt = ch.clone().path;
       match ch_file_path_opt {
         None => (),
         Some(ch_file_path) => {
           let path = root.join(&ch_file_path);
           let s =
-            md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path, html_cfg)
-              .unwrap();
-          f.write_all(s.as_bytes()).unwrap()
+            md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path, html_cfg)?;
+          f.write_all(s.as_bytes())?
         }
       };
-      f.write_all(format!("{}>\n", indent_str).as_bytes())
-        .unwrap();
+      f.write_all(format!("\n{}>", indent_str).as_bytes())?;
     }
     BookItem::Separator => {
-      f.write_all(format!("{indent}+Separator;\n", indent = indent_str).as_bytes())
-        .unwrap();
+      f.write_all(format!("\n\n{indent}+Separator;", indent = indent_str).as_bytes())?;
     }
     BookItem::PartTitle(title) => {
       f.write_all(
         format!(
-          "{indent}+PartTitle{{{title}}};\n",
+          "\n\n{indent}+PartTitle{{{title}}}",
           indent = indent_str,
-          title = md2satysfi::escape_inline_text(title)
+          title = md2satysfi::html2satysfi::escape_inline_text(title)
         )
         .as_bytes(),
-      )
-      .unwrap();
+      )?;
     }
-  }
+  };
+  Ok(())
 }
