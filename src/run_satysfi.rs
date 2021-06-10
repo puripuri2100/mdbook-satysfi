@@ -1,10 +1,17 @@
+use anyhow::{Context, Result};
 use std::path;
 use std::process::Command;
 use toml::map;
-// use toml::value;
 
-pub fn run_satysfi(destination: &path::PathBuf, config: map::Map<String, toml::Value>) -> Vec<u8> {
-  let mut args: Vec<String> = vec![destination.join("main.saty").to_str().unwrap().to_string()];
+pub fn run_satysfi(
+  destination: &path::Path,
+  config: map::Map<String, toml::Value>,
+) -> Result<Vec<u8>> {
+  let mut args: Vec<String> = vec![destination
+    .join("main.saty")
+    .to_str()
+    .with_context(|| "cannot join file name")?
+    .to_string()];
   if let Some(is_bytecomp) = config.get("is-bytecomp").map(|v| v.as_bool()).flatten() {
     if is_bytecomp {
       args.push("--bytecomp".to_string())
@@ -30,14 +37,26 @@ pub fn run_satysfi(destination: &path::PathBuf, config: map::Map<String, toml::V
     }
   };
   if let Some(output_file_name) = config.get("output-file-name").map(|v| v.as_str()).flatten() {
-    let path = format!("{}/{}", destination.to_str().unwrap(), output_file_name);
+    let path = format!(
+      "{}/{}",
+      destination
+        .to_str()
+        .with_context(|| "cannot join file name")?,
+      output_file_name
+    );
     args.push(format!("--output {}", path))
   };
   if let Some(config_path) = config.get("config-path").map(|v| v.as_str()).flatten() {
     let paths = config_path.split(',').map(|s| s.trim()).collect::<Vec<_>>();
     let mut paths_str = String::new();
     for path in paths.iter() {
-      paths_str.push_str(&format!("{}/{},", destination.to_str().unwrap(), path))
+      paths_str.push_str(&format!(
+        "{}/{},",
+        destination
+          .to_str()
+          .with_context(|| "cannot join file name")?,
+        path
+      ))
     }
     args.push(format!("--config {}", paths_str))
   };
@@ -109,11 +128,7 @@ pub fn run_satysfi(destination: &path::PathBuf, config: map::Map<String, toml::V
       args.push("--debug-show-overfull".to_string())
     }
   };
-  let run_satysfi_command = Command::new("satysfi").args(&args).output().unwrap();
-  let mut arg_str = String::new();
-  for s in args.iter() {
-    arg_str.push_str(&format!(" {}", s))
-  }
-  println!("satysfi {}", arg_str);
-  run_satysfi_command.stdout
+  println!("satysfi {}", args.join(" "));
+  let run_satysfi_command = Command::new("satysfi").args(&args).output()?;
+  Ok(run_satysfi_command.stdout)
 }
