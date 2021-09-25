@@ -41,9 +41,9 @@ jobs:
           
       - run: |
           cd $(pwd)/doc/ja
-          ls
-          export HOME=/root
           mdbook build
+
+      - run: satysfi $(pwd)/doc/ja/book/satysfi/main.saty -o $(pwd)/doc/ja/book/satysfi/ja.pdf
 
       - run: |
           mkdir -p pages/ja
