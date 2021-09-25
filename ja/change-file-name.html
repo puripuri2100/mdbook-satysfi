@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>mdbook-satysfi - mdbook-satysfi Documentation(ja)</title>
+        <title>出力するファイルの名前を変更する - mdbook-satysfi Documentation(ja)</title>
                 
 
         <!-- Custom HTML head -->
@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="change-file-name.html"><strong aria-hidden="true">2.</strong> 出力するファイルの名前を変更する</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">3.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">4.</strong> HTMLタグを変換する</a></li><li class="chapter-item expanded "><a href="class.html"><strong aria-hidden="true">5.</strong> クラスファイルを自作する</a></li><li class="chapter-item expanded "><a href="run-satysfi.html"><strong aria-hidden="true">6.</strong> SATySFiを呼び出す</a></li></ol>            </div>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="change-file-name.html" class="active"><strong aria-hidden="true">2.</strong> 出力するファイルの名前を変更する</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">3.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">4.</strong> HTMLタグを変換する</a></li><li class="chapter-item expanded "><a href="class.html"><strong aria-hidden="true">5.</strong> クラスファイルを自作する</a></li><li class="chapter-item expanded "><a href="run-satysfi.html"><strong aria-hidden="true">6.</strong> SATySFiを呼び出す</a></li></ol>            </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
@@ -148,30 +148,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="mdbook-satysfi"><a class="header" href="#mdbook-satysfi">mdbook-satysfi</a></h1>
-<p><strong>mdbook-satysfi</strong>はmarkdownファイルからHTMLファイルで構成された<em>book</em>を生成するRust製のソフトウェアである<a href="https://rust-lang.github.io/mdBook/index.html">mdbook</a>の拡張機能を提供するソフトウェアです。</p>
-<p>mdbook-satysfiをインストールした状態でbook.tomlに<code>[output.satysfi]</code>という記述を追加して<code>mdbook build</code>を実行すると、bookの内容と同じ内容のSATySFiのドキュメントファイルが生成されます。</p>
-<h2 id="実装"><a class="header" href="#実装">実装</a></h2>
-<p>実装はRustで行っています。</p>
-<p>リポジトリは<a href="https://github.com/puripuri2100/mdbook-satysfi">puripuri2100/mdbook-satysfi</a>です。</p>
-<h2 id="依存するもの"><a class="header" href="#依存するもの">依存するもの</a></h2>
-<p>インストールにはRustとCargoを必要とします。</p>
-<p>また、生成されたドキュメントファイルを処理するためには<a href="https://github.com/puripuri2100/satysfi-class-mdbook-satysfi">class-mdbook-satysfi</a>というSATySFi用のライブラリのv0.2.0が必要であり、これのインストールには<a href="https://github.com/na4zagin3/satyrographos">satyrographos</a>が必要です。
-当然のことながら<a href="https://github.com/gfngfn/SATySFi">SATySFi</a>も必要です。</p>
-<h2 id="インストール方法"><a class="header" href="#インストール方法">インストール方法</a></h2>
-<p>RustとCargoをインストールした状態で</p>
-<pre><code>cargo install mdbook-satysfi
+                        <h1 id="出力するファイルの名前を変更する"><a class="header" href="#出力するファイルの名前を変更する">出力するファイルの名前を変更する</a></h1>
+<p>book.tomlに以下のような内容を加えることで出力されるSATySFiの文書ファイルの名前を変更することができます。</p>
+<pre><code>[output.satysfi]
+output-file-name = &quot;name.saty&quot;;
 </code></pre>
-<p>と行うことで最新版が手に入ります。</p>
-<h2 id="license"><a class="header" href="#license">License</a></h2>
-<p>mdbook-satysfiはMITライセンスのもと公開されています。</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                                                    <a rel="prev" href="mdbook-satysfi.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
                         
-                                                    <a rel="next" href="change-file-name.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                                    <a rel="next" href="specify-packages-to-load.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -181,8 +172,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                                    <a rel="prev" href="mdbook-satysfi.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
                 
-                                    <a rel="next" href="change-file-name.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                    <a rel="next" href="specify-packages-to-load.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                             </nav>

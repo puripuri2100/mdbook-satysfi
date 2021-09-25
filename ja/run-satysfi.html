@@ -4,38 +4,27 @@
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>SATySFiを呼び出す - mdbook-satysfi Documentation(ja)</title>
-        
-        
-
+                
 
         <!-- Custom HTML head -->
         
-
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="mdbook-satysfiのドキュメント">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        
-        <link rel="icon" href="favicon.svg">
-        
-        
-        <link rel="shortcut icon" href="favicon.png">
-        
-        <link rel="stylesheet" href="css/variables.css">
+                <link rel="icon" href="favicon.svg">
+                        <link rel="shortcut icon" href="favicon.png">
+                <link rel="stylesheet" href="css/variables.css">
         <link rel="stylesheet" href="css/general.css">
         <link rel="stylesheet" href="css/chrome.css">
+                <link rel="stylesheet" href="css/print.css" media="print">
         
-        <link rel="stylesheet" href="css/print.css" media="print">
-        
-
         <!-- Fonts -->
         <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+                <link rel="stylesheet" href="fonts/fonts.css">
         
-        <link rel="stylesheet" href="fonts/fonts.css">
-        
-
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="highlight.css">
         <link rel="stylesheet" href="tomorrow-night.css">
@@ -43,12 +32,9 @@
 
         <!-- Custom theme stylesheets -->
         
-
-        
-        <!-- MathJax -->
+                <!-- MathJax -->
         <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        
-    </head>
+            </head>
     <body>
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
@@ -98,8 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">2.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">3.</strong> HTMLタグを変換する</a></li><li class="chapter-item expanded "><a href="class.html"><strong aria-hidden="true">4.</strong> クラスファイルを自作する</a></li><li class="chapter-item expanded "><a href="run-satysfi.html" class="active"><strong aria-hidden="true">5.</strong> SATySFiを呼び出す</a></li></ol>
-            </div>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="mdbook-satysfi.html"><strong aria-hidden="true">1.</strong> mdbook-satysfi</a></li><li class="chapter-item expanded "><a href="change-file-name.html"><strong aria-hidden="true">2.</strong> 出力するファイルの名前を変更する</a></li><li class="chapter-item expanded "><a href="specify-packages-to-load.html"><strong aria-hidden="true">3.</strong> 読み込むパッケージを指定する</a></li><li class="chapter-item expanded "><a href="convert-html-code.html"><strong aria-hidden="true">4.</strong> HTMLタグを変換する</a></li><li class="chapter-item expanded "><a href="class.html"><strong aria-hidden="true">5.</strong> クラスファイルを自作する</a></li><li class="chapter-item expanded "><a href="run-satysfi.html" class="active"><strong aria-hidden="true">6.</strong> SATySFiを呼び出す</a></li></ol>            </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
@@ -123,33 +108,27 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                                <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
-                        
-                    </div>
+                                            </div>
 
                     <h1 class="menu-title">mdbook-satysfi Documentation(ja)</h1>
 
                     <div class="right-buttons">
-                        
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                                                <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
-                        
-                        
-                        <a href="https://github.com/puripuri2100/mdbook-satysfi" title="Git repository" aria-label="Git repository">
+                                                                        <a href="https://github.com/puripuri2100/mdbook-satysfi" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        
+                                                
                     </div>
                 </div>
 
-                
-                <div id="search-wrapper" class="hidden">
+                                <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -158,7 +137,6 @@
                     </div>
                 </div>
                 
-
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script type="text/javascript">
                     document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
@@ -170,90 +148,130 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#satysfiを呼び出す" id="satysfiを呼び出す">SATySFiを呼び出す</a></h1>
+                        <h1 id="satysfiを呼び出す"><a class="header" href="#satysfiを呼び出す">SATySFiを呼び出す</a></h1>
 <p><code>[output.satysfi]</code>テーブルの中に<code>pdf = true</code>というコードを入れると、自動でSATySFiが呼び出され、出力したsatyファイルがコンパイルされてPDFファイルが生成されます。</p>
 <p>デフォルトでは<code>pdf = false</code>で、SATySFiは呼び出されません。</p>
-<h2><a class="header" href="#高度な設定" id="高度な設定">高度な設定</a></h2>
+<h2 id="高度な設定"><a class="header" href="#高度な設定">高度な設定</a></h2>
 <pre><code class="language-toml">[output.satysfi]
   [output.satysfi.pdf]
     # 各種設定
 </code></pre>
 <p>とすることで高度な設定を行うことができます。</p>
-<p>設定の中で使うことのできるフィールドと内容です：</p>
+<h3 id="satysfiの起動コマンドを変更する"><a class="header" href="#satysfiの起動コマンドを変更する">SATySFiの起動コマンドを変更する</a></h3>
+<p>以下のように<code>commands</code>というkeyに対してSATySFiを起動するためのコマンドを文字列か文字列のリストで与えることでSATySFiの起動コマンドを変更することができます。デフォルトは<code>satysfi</code>です。</p>
+<pre><code class="language-toml">[output.satysfi]
+  [output.satysfi.pdf]
+    commands = [&quot;wsl&quot;, &quot;satysfi&quot;]
+</code></pre>
+<p>上のように、<code>[&quot;wsl&quot;, &quot;satysfi&quot;]</code>と与えると、SATySFiを起動するために</p>
+<pre><code>wsl satysfi main.saty
+</code></pre>
+<p>というコマンドが実行されます。</p>
+<p>このままではLinuxでも<code>wsl</code>コマンドが呼ばれてしまうため、OSごとに切り替えることができるようになっています。</p>
+<pre><code class="language-toml">[output.satysfi]
+  [output.satysfi.pdf]
+    commands = {
+      windows = [&quot;wsl&quot;, &quot;satysfi&quot;],
+      macos = [&quot;satysfi&quot;],
+      linux = &quot;satysfi&quot;,
+      others = &quot;satysfi&quot;
+    }
+</code></pre>
+<p>のようにすることでOSごとに呼び出しコマンドを切り替えることができます（この場合も、コマンド名として文字列または文字列のリストを与えます）。</p>
+<p>現在、選択できるのは</p>
 <ul>
-<li><code>is-bytecomp</code>：真偽値を与えます。<code>--bytecomp</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-type-check-only</code>：真偽値を与えます。<code>--type-check-only</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-debug-show-bbox</code>：真偽値を与えます。<code>--debug-show-bbox</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-debug-show-space</code>：真偽値を与えます。<code>--debug-show-space</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-debug-show-block-bbox</code>：真偽値を与えます。<code>--debug-show-block-bbox</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-debug-show-block-space</code>：真偽値を与えます。<code>--debug-show-block-space</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-debug-show-overfull</code>：真偽値を与えます。<code>--debug-debug-show-overfull</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-full-path</code>：真偽値を与えます。<code>--full-path</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-show-fonts</code>：真偽値を与えます。<code>--show-fonts</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>is-no-default-config</code>：真偽値を与えます。<code>--no-default-config</code>オプションを与えるかどうかを選択します。デフォルトはfalseです。</li>
-<li><code>config-path</code>：<code>--config</code>オプションに与える文字列を与えます。絶対pathに変換された後に<code>--config</code>オプションに与えられます。デフォルトではオプションそのものが与えられません。</li>
-<li><code>page-number-limit</code>：数値を与えます。<code>--page-number-limit</code>オプションに与える数値です。デフォルトではオプションそのものが与えられません。</li>
-<li><code>output-file-name</code>：文字列を与えます。<code>--output</code>オプションに与える数値です。デフォルトではオプションそのものが与えられません。</li>
-<li><code>text-mode-configs</code>：<code>--text-mode</code>オプションに与える文字列を与えます。デフォルトではオプションそのものが与えられません。</li>
+<li>Windows</li>
+<li>MacOS</li>
+<li>Linux</li>
 </ul>
+<p>の3種類のみで、それ以外のOSは<code>others</code>でひとまとめにされています。</p>
+<p>省略した場合はデフォルトの<code>satysfi</code>が起動コマンドとして選択されますので、</p>
+<pre><code class="language-toml">[output.satysfi]
+  [output.satysfi.pdf]
+    commands = {windows = [&quot;wsl&quot;, &quot;satysfi&quot;]}
+</code></pre>
+<p>と書けば「Windowsのときには<code>wsl satysfi &lt;file name&gt;</code>で起動させ、それ以外のOSでは<code>satysfi &lt;file name&gt;</code>で起動させると設定できます。</p>
+<h3 id="satysfiに与えるオプションの変更"><a class="header" href="#satysfiに与えるオプションの変更">SATySFiに与えるオプションの変更</a></h3>
+<p>SATySFiに与えるオプションを変更することができます。</p>
+<ul>
+<li>変更するためにTOMLに与える時に使うキーの名前</li>
+<li>対応して変更されるSATySFiのオプション</li>
+<li>キーに対応して与える値の種類</li>
+<li>デフォルトの値</li>
+</ul>
+<p>の一覧のリストは以下のようになっています。</p>
+<p>なお、<code>text-mode-configs</code>で文字列を与える場合は、</p>
+<pre><code class="language-toml">[output.satysfi]
+  [output.satysfi.pdf]
+    text-mode-cofings = &quot;tex,latex&quot;
+</code></pre>
+<p>のようにカンマ区切りで文字列を与えてください。</p>
+<p>文字列のリストで与える場合はそのまま</p>
+<pre><code class="language-toml">[output.satysfi]
+  [output.satysfi.pdf]
+    text-mode-cofings = [&quot;tex&quot;, &quot;latex&quot;]
+</code></pre>
+<p>のように与えてください。</p>
+<p>また、<code>config-path</code>に与えるパスは「“{build-dir}/satysfi”フォルダ」からの相対パスにしてください。</p>
+<p><code>output-file-name</code>に与えるファイルのパスは<code>config-path</code>同様に、「“{build-dir}/satysfi”フォルダ」からの相対パスにしてください。</p>
+<table><thead><tr><th align="center">キー</th><th align="center">SATySFiのオプション</th><th align="center">値</th><th align="center">デフォルト</th></tr></thead><tbody>
+<tr><td align="center"><code>is-bytecomp</code></td><td align="center"><code>--bytecomp</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-type-check-only</code></td><td align="center"><code>--type-check-only</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-debug-show-bbox</code></td><td align="center"><code>--debug-show-bbox</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-debug-show-space</code></td><td align="center"><code>--debug-show-space</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-debug-show-block-bbox</code></td><td align="center"><code>--debug-show-block-bbox</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-debug-show-block-space</code></td><td align="center"><code>--debug-show-block-space</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-debug-show-overfull</code></td><td align="center"><code>--debug-show-overfull</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-full-path</code></td><td align="center"><code>--full-path</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-show-fonts</code></td><td align="center"><code>--show-fonts</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>is-no-default-config</code></td><td align="center"><code>--no-default-config</code></td><td align="center">真偽値</td><td align="center">false</td></tr>
+<tr><td align="center"><code>config-path</code></td><td align="center"><code>--config</code></td><td align="center">文字列</td><td align="center">オプションがつかない</td></tr>
+<tr><td align="center"><code>page-number-limit</code></td><td align="center"><code>--page-number-limt</code></td><td align="center">数値</td><td align="center">オプションがつかない</td></tr>
+<tr><td align="center"><code>output-file-name</code></td><td align="center"><code>--output</code></td><td align="center">文字列</td><td align="center">オプションがつかない</td></tr>
+<tr><td align="center"><code>text-mode-configs</code></td><td align="center"><code>--text-mode</code></td><td align="center">文字列・文字列のリスト</td><td align="center">オプションがつかない</td></tr>
+</tbody></table>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                        
-                            <a rel="prev" href="class.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                                    <a rel="prev" href="class.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
-
                         
-
                         <div style="clear: both"></div>
                     </nav>
                 </div>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                
-                    <a rel="prev" href="class.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                    <a rel="prev" href="class.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
-
-                
-            </nav>
+                            </nav>
 
         </div>
 
         
-
         
-
         
-
-        
-        <script type="text/javascript">
+                <script type="text/javascript">
             window.playground_copyable = true;
         </script>
         
-
         
-
-        
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+                <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
         
-
         <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
         <script src="book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
         
-
         
-
     </body>
 </html>
