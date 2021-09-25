@@ -16,3 +16,7 @@ site-url = "https://puripuri2100.github.io/mdbook-satysfi/ja/book/"
 mathjax-support = true
 
 [output.satysfi]
+
+[output.satysfi.pdf]
+commands = {windows = ["wsl", "satysfi"], macos = ["satysfi"], linux = "satysfi", others = ["satysfi"]}
+#commands = ["wsl", "satysfi"]
