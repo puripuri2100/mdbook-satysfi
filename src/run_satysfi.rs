@@ -3,15 +3,89 @@ use std::path;
 use std::process::Command;
 use toml::map;
 
+fn get_command_list(config: &map::Map<String, toml::Value>) -> Option<(String, Vec<String>)> {
+  let mut command_name = "".to_string();
+  let mut option_lst = vec![];
+  #[cfg(target_os = "windows")]
+  let os_name = "windows";
+  #[cfg(target_os = "macos")]
+  let os_name = "macos";
+  #[cfg(target_os = "linux")]
+  let os_name = "linux";
+  #[cfg(all(
+    not(target_os = "windows"),
+    not(target_os = "macos"),
+    not(target_os = "linux")
+  ))]
+  let os_name = "others";
+
+  if let Some(commands_table) = config.get("commands").map(|v| v.as_table()).flatten() {
+    commands_table
+      .get(os_name)
+      .map(|v| {
+        // ["wsl", "satysfi"] or ["satysfi"] or "satysfi"
+        match v.as_str() {
+          Some(command_name) => Some((command_name.to_string(), vec![])),
+          None => match v.as_array() {
+            None => None,
+            Some(array) => {
+              let lst_opt = array.iter().map(|v| v.as_str()).collect::<Option<Vec<_>>>();
+              match lst_opt {
+                None => {
+                  eprintln!("output.satysfi.pdf.command.{{os_name}} require type 'string array' or 'string'");
+                  None
+                }
+                Some(lst) => {
+                  let mut iter = lst.iter();
+                  if let Some(new_command_name) = iter.next() {
+                    command_name = new_command_name.to_string()
+                  };
+                  for command in iter {
+                    option_lst.push(command.to_string())
+                  }
+                  Some((command_name, option_lst))
+                }
+              }
+            }
+          },
+        }
+      })
+      .flatten()
+  } else if let Some(command_lst) = config.get("commands").map(|v| v.as_array()).flatten() {
+    let lst_opt = command_lst
+      .iter()
+      .map(|v| v.as_str())
+      .collect::<Option<Vec<_>>>();
+    match lst_opt {
+      None => {
+        eprintln!("output.satysfi.pdf.command require type 'string array' or 'string'");
+        None
+      }
+      Some(lst) => {
+        let mut iter = lst.iter();
+        if let Some(new_command_name) = iter.next() {
+          command_name = new_command_name.to_string()
+        };
+        for command in iter {
+          option_lst.push(command.to_string())
+        }
+        Some((command_name, option_lst))
+      }
+    }
+  } else {
+    None
+  }
+}
+
 pub fn run_satysfi(
   destination: &path::Path,
   config: map::Map<String, toml::Value>,
 ) -> Result<Vec<u8>> {
-  let mut args: Vec<String> = vec![destination
-    .join("main.saty")
-    .to_str()
-    .with_context(|| "cannot join file name")?
-    .to_string()];
+  let main_file_path = "main.saty".to_string();
+  let (command_name, mut args) = match get_command_list(&config) {
+    None => ("satysfi".to_string(), vec![]),
+    Some((command_name, args)) => (command_name, args),
+  };
   if let Some(is_bytecomp) = config.get("is-bytecomp").map(|v| v.as_bool()).flatten() {
     if is_bytecomp {
       args.push("--bytecomp".to_string())
@@ -132,7 +206,8 @@ pub fn run_satysfi(
       args.push("--debug-show-overfull".to_string())
     }
   };
-  println!("satysfi {}", args.join(" "));
-  let run_satysfi_command = Command::new("satysfi").args(&args).output()?;
+  args.push(main_file_path);
+  println!("{} {}", command_name, args.join(" "));
+  let run_satysfi_command = Command::new(command_name).args(&args).output()?;
   Ok(run_satysfi_command.stdout)
 }

@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     File::create(&destination.join("main.saty")).with_context(|| "Cannot make 'main.saty'")?;
   let mut f = BufWriter::new(f);
 
-  let root = &ctx.source_dir();
+  let source_dir = &ctx.source_dir();
 
   let src_dir = &ctx.root.join(&ctx.config.book.src);
   let build_dir = &ctx.root.join(&ctx.config.build.build_dir);
@@ -190,12 +190,12 @@ document (|
   ctx
     .book
     .iter()
-    .try_for_each(|item| write_bookitme(&mut f, item, &root, &html_cfg))?;
+    .try_for_each(|item| write_bookitme(&mut f, item, &source_dir, &html_cfg))?;
 
   f.write_all(b"\n>\n")?;
   f.flush()?;
   if let Some(pdf_cfg) = pdf_cfg_opt {
-    let msg = run_satysfi::run_satysfi(destination, pdf_cfg)?;
+    let msg = run_satysfi::run_satysfi(&destination, pdf_cfg)?;
     println!("{}", String::from_utf8(msg)?)
   }
   Ok(())
