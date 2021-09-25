@@ -44,9 +44,6 @@ jobs:
           mdbook build
 
       - run: |
-          satysfi $(pwd)/doc/ja/book/satysfi/main.saty -o $(pwd)/doc/ja/book/satysfi/ja.pdf
-
-      - run: |
           mkdir -p pages/ja
           cp -r -f doc/ja/book/html/* pages/ja
           cp -f doc/ja/book/satysfi/ja.pdf pages/ja

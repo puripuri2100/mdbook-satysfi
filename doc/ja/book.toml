@@ -17,6 +17,5 @@ mathjax-support = true
 
 [output.satysfi]
 
-#[output.satysfi.pdf]
-#commands = {windows = ["wsl", "satysfi"], macos = ["satysfi"], linux = "satysfi", others = ["satysfi"]}
-#commands = ["wsl", "satysfi"]
+[output.satysfi.pdf]
+commands = {windows = ["wsl", "satysfi"], macos = ["satysfi"], linux = "satysfi", others = ["satysfi"]}
