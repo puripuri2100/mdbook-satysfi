@@ -28,7 +28,7 @@ jobs:
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
         with:
-          mdbook-version: '0.4.6'
+          mdbook-version: '0.4.12'
 
       - run: cargo install mdbook-satysfi
 
@@ -38,7 +38,9 @@ jobs:
           opam update
           opam install satysfi-class-mdbook-satysfi
           satyrographos install
-          cd doc/ja
+          
+      - run: |
+          cd $(pwd)/doc/ja
           mdbook build
 
       - run: |
