@@ -13,7 +13,7 @@ mod run_satysfi;
 
 fn main() -> Result<()> {
   let app = App::new("mdbook-satysfi")
-    .version("0.0.5")
+    .version("0.0.6")
     .author("Naoki Kaneko <puripuri2100@gmail.com>")
     .about("A mdbook backend for generating SATySFi documents");
   let _ = app.get_matches();
