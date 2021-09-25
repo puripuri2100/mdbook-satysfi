@@ -1,5 +1,4 @@
-use anyhow::{Context, Result};
-use std::path;
+use anyhow::Result;
 use std::process::Command;
 use toml::map;
 
@@ -79,7 +78,6 @@ fn get_command_list(config: &map::Map<String, toml::Value>) -> Option<(String, V
 
 pub fn run_satysfi(
   output_file_name: &str,
-  destination: &path::Path,
   config: map::Map<String, toml::Value>,
 ) -> Result<Vec<u8>> {
   let main_file_path = output_file_name.to_string();
@@ -112,30 +110,12 @@ pub fn run_satysfi(
     }
   };
   if let Some(output_file_name) = config.get("output-file-name").map(|v| v.as_str()).flatten() {
-    let path = format!(
-      "{}/{}",
-      destination
-        .to_str()
-        .with_context(|| "cannot join file name")?,
-      output_file_name
-    );
     args.push("--output".to_string());
-    args.push(path);
+    args.push(output_file_name.to_string());
   };
   if let Some(config_path) = config.get("config-path").map(|v| v.as_str()).flatten() {
-    let paths = config_path.split(',').map(|s| s.trim()).collect::<Vec<_>>();
-    let mut paths_str = String::new();
-    for path in paths.iter() {
-      paths_str.push_str(&format!(
-        "{}/{},",
-        destination
-          .to_str()
-          .with_context(|| "cannot join file name")?,
-        path
-      ))
-    }
     args.push("--config".to_string());
-    args.push(paths_str);
+    args.push(config_path.to_string());
   };
   if let Some(is_no_default_config) = config
     .get("is-no-default-config")
@@ -161,6 +141,18 @@ pub fn run_satysfi(
   {
     args.push("--text-mode".to_string());
     args.push(text_mode_configs.to_string());
+  };
+  if let Some(text_mode_configs) = config
+    .get("text-mode-configs")
+    .map(|v| {
+      v.as_array()
+        .map(|lst| lst.iter().map(|v| v.as_str()).collect::<Option<Vec<_>>>())
+    })
+    .flatten()
+    .flatten()
+  {
+    args.push("--text-mode".to_string());
+    args.push(text_mode_configs.join(","));
   };
   if let Some(is_debug_show_bbox) = config
     .get("is-debug-show-bbox")

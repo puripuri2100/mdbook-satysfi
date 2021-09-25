@@ -34,8 +34,8 @@ fn main() -> Result<()> {
 
   let destination = &ctx.destination;
   let _ = fs::create_dir_all(&destination);
-  let f =
-    File::create(&destination.join(output_file_name)).with_context(|| "Cannot make 'main.saty'")?;
+  let f = File::create(&destination.join(output_file_name))
+    .with_context(|| format!("Cannot make '{}'", output_file_name))?;
   let mut f = BufWriter::new(f);
 
   let source_dir = &ctx.source_dir();
@@ -205,7 +205,7 @@ document (|
   f.write_all(b"\n>\n")?;
   f.flush()?;
   if let Some(pdf_cfg) = pdf_cfg_opt {
-    let msg = run_satysfi::run_satysfi(output_file_name, destination, pdf_cfg)?;
+    let msg = run_satysfi::run_satysfi(output_file_name, pdf_cfg)?;
     println!("{}", String::from_utf8(msg)?)
   }
   Ok(())
