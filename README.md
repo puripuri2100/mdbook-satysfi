@@ -8,7 +8,7 @@
 [crates]: https://crates.io/crates/mdbook-satysfi
 [crates-badge]: https://img.shields.io/crates/v/mdbook-satysfi
 [ci]: https://github.com/puripuri2100/mdbook-satysfi/actions?query=workflow%3ARust%20CI
-[ci-badge]: https://github.com/puripuri2100/mdbook-satysfi/workflows/Rust%20CI/badge.svg?branch=master
+[ci-badge]: https://github.com/puripuri2100/mdbook-satysfi/actions/workflows/rust.yml?query=workflow%3ARust
 [source]: https://github.com/puripuri2100/mdbook-satysfi
 [source-badge]: https://img.shields.io/badge/source-github-blue
 [license]: https://github.com/puripuri2100/mdbook-satysfi/blob/master/LICENSE
