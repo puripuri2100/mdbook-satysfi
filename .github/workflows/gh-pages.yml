@@ -33,17 +33,16 @@ jobs:
       - run: cargo install mdbook-satysfi
 
       - run: |
+          cd doc/ja
+          mdbook build
+
+      - run: |
           export HOME=/root # workaround
           eval $(opam env)
           opam update
           opam install satysfi-class-mdbook-satysfi
           satyrographos install
-          
-      - run: |
-          cd $(pwd)/doc/ja
-          mdbook build
-
-      - run: satysfi $(pwd)/doc/ja/book/satysfi/main.saty -o $(pwd)/doc/ja/book/satysfi/ja.pdf
+          satysfi $(pwd)/doc/ja/book/satysfi/main.saty -o $(pwd)/doc/ja/book/satysfi/ja.pdf
 
       - run: |
           mkdir -p pages/ja
