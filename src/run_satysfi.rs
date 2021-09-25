@@ -78,10 +78,11 @@ fn get_command_list(config: &map::Map<String, toml::Value>) -> Option<(String, V
 }
 
 pub fn run_satysfi(
+  output_file_name : &str,
   destination: &path::Path,
   config: map::Map<String, toml::Value>,
 ) -> Result<Vec<u8>> {
-  let main_file_path = "main.saty".to_string();
+  let main_file_path = output_file_name.to_string();
   let (command_name, mut args) = match get_command_list(&config) {
     None => ("satysfi".to_string(), vec![]),
     Some((command_name, args)) => (command_name, args),

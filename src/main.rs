@@ -22,10 +22,19 @@ fn main() -> Result<()> {
   let mut stdin = BufReader::new(stdin);
   let ctx = RenderContext::from_json(&mut stdin)?;
 
+  let output_file_name = match &ctx.config
+    .get("output.satysfi.output-file-name")
+    .map(|toml| toml.as_str())
+    .flatten()
+  {
+    None => "main.saty",
+    Some(name) => name,
+  };
+
   let destination = &ctx.destination;
   let _ = fs::create_dir_all(&destination);
   let f =
-    File::create(&destination.join("main.saty")).with_context(|| "Cannot make 'main.saty'")?;
+    File::create(&destination.join(output_file_name)).with_context(|| "Cannot make 'main.saty'")?;
   let mut f = BufWriter::new(f);
 
   let source_dir = &ctx.source_dir();
@@ -195,7 +204,7 @@ document (|
   f.write_all(b"\n>\n")?;
   f.flush()?;
   if let Some(pdf_cfg) = pdf_cfg_opt {
-    let msg = run_satysfi::run_satysfi(&destination, pdf_cfg)?;
+    let msg = run_satysfi::run_satysfi(output_file_name, &destination, pdf_cfg)?;
     println!("{}", String::from_utf8(msg)?)
   }
   Ok(())
