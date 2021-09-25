@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use clap::App;
 use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
@@ -11,6 +12,12 @@ mod md2satysfi;
 mod run_satysfi;
 
 fn main() -> Result<()> {
+  let app = App::new("mdbook-satysfi")
+    .version("0.0.5")
+    .author("Naoki Kaneko <puripuri2100@gmail.com>")
+    .about("A mdbook backend for generating SATySFi documents");
+  let _ = app.get_matches();
+
   let stdin = io::stdin();
   let mut stdin = BufReader::new(stdin);
   let ctx = RenderContext::from_json(&mut stdin)?;
