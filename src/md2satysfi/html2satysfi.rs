@@ -321,7 +321,7 @@ fn node_to_satysfi_code(
                             Some(format!(r#"({{{}}})"#, attribute_value))
                           }
                           AttributeType::String => {
-                            Some(format!(r#"({})"#, make_code(false, &attribute_value)))
+                            Some(format!(r#"({})"#, make_code(false, attribute_value)))
                           }
                           AttributeType::Int => attribute_value
                             .parse::<isize>()
@@ -732,7 +732,7 @@ pub fn escape_inline_text(text: &str) -> String {
 fn make_code(is_block: bool, code_str: &str) -> String {
   let i = count_accent_in_inline_text(code_str);
   let raw = "`".repeat(i + 1);
-  let code = mdbook_specific_features::hiding_code_lines(&code_str);
+  let code = mdbook_specific_features::hiding_code_lines(code_str);
   if is_block {
     format!("{raw}\n{code}\n{raw}", code = code, raw = raw)
   } else {

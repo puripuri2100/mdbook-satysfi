@@ -78,7 +78,7 @@ fn get_command_list(config: &map::Map<String, toml::Value>) -> Option<(String, V
 }
 
 pub fn run_satysfi(
-  output_file_name : &str,
+  output_file_name: &str,
   destination: &path::Path,
   config: map::Map<String, toml::Value>,
 ) -> Result<Vec<u8>> {

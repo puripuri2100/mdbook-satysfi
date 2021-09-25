@@ -22,7 +22,8 @@ fn main() -> Result<()> {
   let mut stdin = BufReader::new(stdin);
   let ctx = RenderContext::from_json(&mut stdin)?;
 
-  let output_file_name = match &ctx.config
+  let output_file_name = match &ctx
+    .config
     .get("output.satysfi.output-file-name")
     .map(|toml| toml.as_str())
     .flatten()
@@ -41,7 +42,7 @@ fn main() -> Result<()> {
 
   let src_dir = &ctx.root.join(&ctx.config.book.src);
   let build_dir = &ctx.root.join(&ctx.config.build.build_dir);
-  copy::copy_files_except_ext(src_dir, &destination, Some(build_dir), &["md"])?;
+  copy::copy_files_except_ext(src_dir, destination, Some(build_dir), &["md"])?;
 
   let cfg = &ctx.config;
   let book = &cfg.book;
@@ -199,12 +200,12 @@ document (|
   ctx
     .book
     .iter()
-    .try_for_each(|item| write_bookitme(&mut f, item, &source_dir, &html_cfg))?;
+    .try_for_each(|item| write_bookitme(&mut f, item, source_dir, &html_cfg))?;
 
   f.write_all(b"\n>\n")?;
   f.flush()?;
   if let Some(pdf_cfg) = pdf_cfg_opt {
-    let msg = run_satysfi::run_satysfi(output_file_name, &destination, pdf_cfg)?;
+    let msg = run_satysfi::run_satysfi(output_file_name, destination, pdf_cfg)?;
     println!("{}", String::from_utf8(msg)?)
   }
   Ok(())
