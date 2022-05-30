@@ -175,8 +175,8 @@
 <li><code>\p: [inline-text]</code>：段落を表します。</li>
 <li><code>+code: [string]</code>：インラインコードを表します。</li>
 <li><code>\code: [string]</code>：インラインコードを表します。</li>
-<li><code>+code-block: [string]</code>：ブロックコードを表します。</li>
-<li><code>\code-block: [string]</code>：ブロックコードを表します。</li>
+<li><code>+code-block: [string option; string option; string]</code>：ブロックコードを表します。一つ目の引数は指定された言語を表し、二つ目の引数はカラーテーマを表します。ここに与えられる値は<code>book.toml</code>に<code>color-theme = &quot;theme name&quot;</code>と表記されると変更可能です。</li>
+<li><code>\code-block: [string option; string option; string]</code>：同上</li>
 <li><code>\href: [string; inline-text]</code>：リンクを表します。</li>
 <li><code>+img: [string; inline-text]</code>：画像挿入を表します。二つ目の引数はキャプションです。</li>
 <li><code>\img: [string; inline-text]</code>：画像挿入を表します。二つ目の引数はキャプションです。</li>
