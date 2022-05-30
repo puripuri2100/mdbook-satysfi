@@ -448,7 +448,7 @@ fn check_html_to_satysfi_code_3() {
 #[test]
 fn check_html_to_satysfi_code_4() {
   assert_eq!(
-    "\n    +code-block(None)(`\n\\{{#include file.rs}}\n`);".to_string(),
+    "\n    +code-block(None)(None)(`\n\\{{#include file.rs}}\n`);".to_string(),
     html_to_satysfi_code(
       r#"<div class="code-block">\{{#include file.rs}}</div>"#,
       Mode::Block,
@@ -462,7 +462,7 @@ fn check_html_to_satysfi_code_4() {
 #[test]
 fn check_html_to_satysfi_code_4_2() {
   assert_eq!(
-    "\n    +code-block(Some(` satysfi `))(`\n\\{{#include file.rs}}\n`);".to_string(),
+    "\n    +code-block(Some(` satysfi `))(None)(`\n\\{{#include file.rs}}\n`);".to_string(),
     html_to_satysfi_code(
       r#"<div class="code-block" lang="satysfi">\{{#include file.rs}}</div>"#,
       Mode::Block,
