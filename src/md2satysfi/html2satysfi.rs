@@ -590,6 +590,9 @@ const DEFAULT_HTML_CONFIG: &str = r#"
 [code-block]
   command_name="code-block"
   children_type="block code"
+  [[code-block.attribute]]
+  "name" = "lang"
+  "type" = "string option"
 [a]
   command_name="href"
   children_type="inline"
