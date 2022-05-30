@@ -448,9 +448,23 @@ fn check_html_to_satysfi_code_3() {
 #[test]
 fn check_html_to_satysfi_code_4() {
   assert_eq!(
-    "\n    +code-block(`\n\\{{#include file.rs}}\n`);".to_string(),
+    "\n    +code-block(None)(None)(`\n\\{{#include file.rs}}\n`);".to_string(),
     html_to_satysfi_code(
       r#"<div class="code-block">\{{#include file.rs}}</div>"#,
+      Mode::Block,
+      &Path::new("ch1/hoge.md"),
+      &map::Map::new(),
+      &Path::new("ch1/hoge.md")
+    )
+    .unwrap_or_default()
+  )
+}
+#[test]
+fn check_html_to_satysfi_code_4_2() {
+  assert_eq!(
+    "\n    +code-block(Some(` satysfi `))(None)(`\n\\{{#include file.rs}}\n`);".to_string(),
+    html_to_satysfi_code(
+      r#"<div class="code-block" lang="satysfi">\{{#include file.rs}}</div>"#,
       Mode::Block,
       &Path::new("ch1/hoge.md"),
       &map::Map::new(),
@@ -590,6 +604,12 @@ const DEFAULT_HTML_CONFIG: &str = r#"
 [code-block]
   command_name="code-block"
   children_type="block code"
+  [[code-block.attribute]]
+  "name" = "lang"
+  "type" = "string option"
+  [[code-block.attribute]]
+  "name" = "theme"
+  "type" = "string option"
 [a]
   command_name="href"
   children_type="inline"

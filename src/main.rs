@@ -58,8 +58,8 @@ fn main() -> Result<()> {
   };
   let pdf_toml_value_opt = &cfg.get("output.satysfi.pdf");
   let pdf_cfg_opt = match (
-    pdf_toml_value_opt.map(|v| v.as_bool()).flatten(),
-    pdf_toml_value_opt.map(|v| v.as_table()).flatten(),
+    pdf_toml_value_opt.and_then(|v| v.as_bool()),
+    pdf_toml_value_opt.and_then(|v| v.as_table()),
   ) {
     (_, Some(t)) => Some(t.clone()),
     (Some(b), _) => {
@@ -164,6 +164,8 @@ fn main() -> Result<()> {
     })
     .unwrap_or_default();
 
+  let code_theme = &satysfi_cfg.get("code-theme").and_then(|v| v.as_str());
+
   f.write_all(
     format!(
       "@{class_file_import_type}: {class_file_name}
@@ -192,7 +194,7 @@ document (|
   ctx
     .book
     .iter()
-    .try_for_each(|item| write_bookitme(&mut f, item, source_dir, &html_cfg))?;
+    .try_for_each(|item| write_bookitme(&mut f, item, source_dir, &html_cfg, code_theme))?;
 
   f.write_all(b"\n>\n")?;
   f.flush()?;
@@ -208,6 +210,7 @@ fn write_bookitme(
   item: &BookItem,
   root: &Path,
   html_cfg: &map::Map<String, toml::Value>,
+  code_theme: &Option<&str>,
 ) -> Result<()> {
   let indent_str = "  ".to_string();
   match item {
@@ -241,8 +244,13 @@ fn write_bookitme(
         None => (),
         Some(ch_file_path) => {
           let path = root.join(&ch_file_path);
-          let s =
-            md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path, html_cfg)?;
+          let s = md2satysfi::md_to_satysfi_code(
+            ch.clone().content,
+            &path,
+            &ch_file_path,
+            html_cfg,
+            code_theme,
+          )?;
           f.write_all(s.as_bytes())?
         }
       };

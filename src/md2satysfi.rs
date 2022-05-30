@@ -1,5 +1,5 @@
 use anyhow::Result;
-use pulldown_cmark::{html, Event, Options, Parser, Tag};
+use pulldown_cmark::{html, CodeBlockKind, Event, Options, Parser, Tag};
 use std::path::Path;
 use toml::map;
 
@@ -11,6 +11,7 @@ pub fn md_to_satysfi_code(
   file_path: &Path,
   ch_file_path: &Path,
   html_cfg: &map::Map<String, toml::Value>,
+  code_theme: &Option<&str>,
 ) -> Result<String> {
   let mut options = Options::empty();
   options.insert(Options::ENABLE_TABLES);
@@ -36,7 +37,21 @@ pub fn md_to_satysfi_code(
       );
       Event::Html(html_tag.into())
     }
-    Event::Start(Tag::CodeBlock(_)) => Event::Html(r#"<div class="code-block">"#.into()),
+    Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(lang))) => {
+      let code_theme_str = code_theme
+        .map(|theme| format!(r#" theme="{}""#, theme))
+        .unwrap_or_default();
+      Event::Html(
+        format!(
+          r#"<div class="code-block" lang="{}"{}>"#,
+          lang, code_theme_str
+        )
+        .into(),
+      )
+    }
+    Event::Start(Tag::CodeBlock(CodeBlockKind::Indented)) => {
+      Event::Html((r#"<div class="code-block">"#).into())
+    }
     Event::End(Tag::CodeBlock(_)) => Event::Html(r#"</div>"#.into()),
     Event::Start(Tag::List(Some(n))) => {
       let html_tag = format!(r#"<ol start="{}">"#, n);
