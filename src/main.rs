@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use clap::App;
+use clap::Command;
 use mdbook::renderer::RenderContext;
 use mdbook::BookItem;
 use std::fs::{self, File};
@@ -12,7 +12,7 @@ mod md2satysfi;
 mod run_satysfi;
 
 fn main() -> Result<()> {
-  let app = App::new("mdbook-satysfi")
+  let app = Command::new("mdbook-satysfi")
     .version("0.0.6")
     .author("Naoki Kaneko <puripuri2100@gmail.com>")
     .about("A mdbook backend for generating SATySFi documents");
@@ -25,8 +25,7 @@ fn main() -> Result<()> {
   let output_file_name = match &ctx
     .config
     .get("output.satysfi.output-file-name")
-    .map(|toml| toml.as_str())
-    .flatten()
+    .and_then(|toml| toml.as_str())
   {
     None => "main.saty",
     Some(name) => name,
@@ -46,18 +45,13 @@ fn main() -> Result<()> {
 
   let cfg = &ctx.config;
   let book = &cfg.book;
-  let satysfi_cfg = match &cfg
-    .get("output.satysfi")
-    .map(|toml| toml.as_table())
-    .flatten()
-  {
+  let satysfi_cfg = match &cfg.get("output.satysfi").and_then(|toml| toml.as_table()) {
     None => map::Map::new(),
     Some(map) => (*map).clone(),
   };
   let html_cfg = match &cfg
     .get("output.satysfi.html")
-    .map(|toml| toml.as_table())
-    .flatten()
+    .and_then(|toml| toml.as_table())
   {
     None => map::Map::new(),
     Some(map) => (*map).clone(),
@@ -106,14 +100,12 @@ fn main() -> Result<()> {
 
   let class_file_name = &satysfi_cfg
     .get("class-file-name")
-    .map(|v| v.as_str())
-    .flatten()
+    .and_then(|v| v.as_str())
     .unwrap_or("class-mdbook-satysfi/mdbook-satysfi");
 
   let is_class_file_require = &satysfi_cfg
     .get("is-class-file-require")
-    .map(|v| v.as_bool())
-    .flatten()
+    .and_then(|v| v.as_bool())
     .unwrap_or(true);
   let class_file_import_type = if *is_class_file_require {
     "require"

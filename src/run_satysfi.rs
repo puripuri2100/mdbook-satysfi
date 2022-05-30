@@ -18,10 +18,10 @@ fn get_command_list(config: &map::Map<String, toml::Value>) -> Option<(String, V
   ))]
   let os_name = "others";
 
-  if let Some(commands_table) = config.get("commands").map(|v| v.as_table()).flatten() {
+  if let Some(commands_table) = config.get("commands").and_then(|v| v.as_table()) {
     commands_table
       .get(os_name)
-      .map(|v| {
+      .and_then(|v| {
         // ["wsl", "satysfi"] or ["satysfi"] or "satysfi"
         match v.as_str() {
           Some(command_name) => Some((command_name.to_string(), vec![])),
@@ -49,8 +49,7 @@ fn get_command_list(config: &map::Map<String, toml::Value>) -> Option<(String, V
           },
         }
       })
-      .flatten()
-  } else if let Some(command_lst) = config.get("commands").map(|v| v.as_array()).flatten() {
+  } else if let Some(command_lst) = config.get("commands").and_then(|v| v.as_array()) {
     let lst_opt = command_lst
       .iter()
       .map(|v| v.as_str())
@@ -85,97 +84,71 @@ pub fn run_satysfi(
     None => ("satysfi".to_string(), vec![]),
     Some((command_name, args)) => (command_name, args),
   };
-  if let Some(is_bytecomp) = config.get("is-bytecomp").map(|v| v.as_bool()).flatten() {
+  if let Some(is_bytecomp) = config.get("is-bytecomp").and_then(|v| v.as_bool()) {
     if is_bytecomp {
       args.push("--bytecomp".to_string())
     }
   };
-  if let Some(is_type_check_only) = config
-    .get("is-type-check-only")
-    .map(|v| v.as_bool())
-    .flatten()
-  {
+  if let Some(is_type_check_only) = config.get("is-type-check-only").and_then(|v| v.as_bool()) {
     if is_type_check_only {
       args.push("--type-check-only".to_string())
     }
   };
-  if let Some(is_full_path) = config.get("is-full-path").map(|v| v.as_bool()).flatten() {
+  if let Some(is_full_path) = config.get("is-full-path").and_then(|v| v.as_bool()) {
     if is_full_path {
       args.push("--full-path".to_string())
     }
   };
-  if let Some(is_show_fonts) = config.get("is-show-fonts").map(|v| v.as_bool()).flatten() {
+  if let Some(is_show_fonts) = config.get("is-show-fonts").and_then(|v| v.as_bool()) {
     if is_show_fonts {
       args.push("--show-fonts".to_string())
     }
   };
-  if let Some(output_file_name) = config.get("output-file-name").map(|v| v.as_str()).flatten() {
+  if let Some(output_file_name) = config.get("output-file-name").and_then(|v| v.as_str()) {
     args.push("--output".to_string());
     args.push(output_file_name.to_string());
   };
-  if let Some(config_path) = config.get("config-path").map(|v| v.as_str()).flatten() {
+  if let Some(config_path) = config.get("config-path").and_then(|v| v.as_str()) {
     args.push("--config".to_string());
     args.push(config_path.to_string());
   };
-  if let Some(is_no_default_config) = config
-    .get("is-no-default-config")
-    .map(|v| v.as_bool())
-    .flatten()
-  {
+  if let Some(is_no_default_config) = config.get("is-no-default-config").and_then(|v| v.as_bool()) {
     if is_no_default_config {
       args.push("--no-default-config".to_string())
     }
   };
-  if let Some(page_number_limit) = config
-    .get("page-number-limit")
-    .map(|v| v.as_integer())
-    .flatten()
-  {
+  if let Some(page_number_limit) = config.get("page-number-limit").and_then(|v| v.as_integer()) {
     args.push("--page-number-limit".to_string());
     args.push(page_number_limit.to_string());
   };
-  if let Some(text_mode_configs) = config
-    .get("text-mode-configs")
-    .map(|v| v.as_str())
-    .flatten()
-  {
+  if let Some(text_mode_configs) = config.get("text-mode-configs").and_then(|v| v.as_str()) {
     args.push("--text-mode".to_string());
     args.push(text_mode_configs.to_string());
   };
   if let Some(text_mode_configs) = config
     .get("text-mode-configs")
-    .map(|v| {
+    .and_then(|v| {
       v.as_array()
         .map(|lst| lst.iter().map(|v| v.as_str()).collect::<Option<Vec<_>>>())
     })
-    .flatten()
     .flatten()
   {
     args.push("--text-mode".to_string());
     args.push(text_mode_configs.join(","));
   };
-  if let Some(is_debug_show_bbox) = config
-    .get("is-debug-show-bbox")
-    .map(|v| v.as_bool())
-    .flatten()
-  {
+  if let Some(is_debug_show_bbox) = config.get("is-debug-show-bbox").and_then(|v| v.as_bool()) {
     if is_debug_show_bbox {
       args.push("--debug-show-bbox".to_string())
     }
   };
-  if let Some(is_debug_show_space) = config
-    .get("is-debug-show-space")
-    .map(|v| v.as_bool())
-    .flatten()
-  {
+  if let Some(is_debug_show_space) = config.get("is-debug-show-space").and_then(|v| v.as_bool()) {
     if is_debug_show_space {
       args.push("--debug-show-space".to_string())
     }
   };
   if let Some(is_debug_show_block_bbox) = config
     .get("is-debug-show-block-bbox")
-    .map(|v| v.as_bool())
-    .flatten()
+    .and_then(|v| v.as_bool())
   {
     if is_debug_show_block_bbox {
       args.push("--debug-show-block-bbox".to_string())
@@ -183,8 +156,7 @@ pub fn run_satysfi(
   };
   if let Some(is_debug_show_block_space) = config
     .get("is-debug-show-block-space")
-    .map(|v| v.as_bool())
-    .flatten()
+    .and_then(|v| v.as_bool())
   {
     if is_debug_show_block_space {
       args.push("--debug-show-block-space".to_string())
@@ -192,8 +164,7 @@ pub fn run_satysfi(
   };
   if let Some(is_debug_show_overfull) = config
     .get("is-debug-show-overfull")
-    .map(|v| v.as_bool())
-    .flatten()
+    .and_then(|v| v.as_bool())
   {
     if is_debug_show_overfull {
       args.push("--debug-show-overfull".to_string())

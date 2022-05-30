@@ -14,7 +14,7 @@ pub fn copy_files_except_ext(
       let metadata = &entry.metadata()?;
       if metadata.is_file() {
         let path = entry.path();
-        let ext_str_opt = path.extension().map(|ext| ext.to_str()).flatten();
+        let ext_str_opt = path.extension().and_then(|ext| ext.to_str());
         let b = match ext_str_opt {
           Some(ext_str) => !ignore_ext_lst
             .iter()

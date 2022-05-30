@@ -72,15 +72,12 @@ fn node_to_satysfi_code(
         Some(toml_data) => {
           let command_name = toml_data
             .get("command_name")
-            .map(|v| v.as_str())
-            .flatten()
+            .and_then(|v| v.as_str())
             .unwrap_or(tag_name);
           let children_type_opt = toml_data
             .get("children_type")
-            .map(|v| v.as_str().map(|s| parse_children_type(s)))
-            .flatten()
-            .flatten();
-          let attribute_cfg_lst = match toml_data.get("attribute").map(|v| v.as_array()).flatten() {
+            .and_then(|v| v.as_str().and_then(parse_children_type));
+          let attribute_cfg_lst = match toml_data.get("attribute").and_then(|v| v.as_array()) {
             Some(v) => v.clone(),
             None => Vec::new(),
           };
@@ -251,12 +248,10 @@ fn node_to_satysfi_code(
           let attributes_str_opt = attribute_cfg_lst
             .iter()
             .map(|toml| {
-              let attribute_name_opt = toml.get("name").map(|v| v.as_str()).flatten();
+              let attribute_name_opt = toml.get("name").and_then(|v| v.as_str());
               let attribute_type_opt = toml
                 .get("type")
-                .map(|v| v.as_str().map(|s| parse_attribute_type(s)))
-                .flatten()
-                .flatten();
+                .and_then(|v| v.as_str().and_then(parse_attribute_type));
               match (attribute_name_opt, attribute_type_opt) {
                 (Some(attribute_name), Some(attribute_type)) => match mode {
                   Mode::Code => {
@@ -300,8 +295,7 @@ fn node_to_satysfi_code(
                             .map(|bool| format!(r#"(Some({}))"#, bool)),
                           AttributeType::Link => ch_file_path
                             .parent()
-                            .map(|path| path.to_str())
-                            .flatten()
+                            .and_then(|path| path.to_str())
                             .map(|path| {
                               format!(
                                 r#"(Some({}))"#,
@@ -333,8 +327,7 @@ fn node_to_satysfi_code(
                             .map(|bool| format!(r#"({})"#, bool)),
                           AttributeType::Link => ch_file_path
                             .parent()
-                            .map(|path| path.to_str())
-                            .flatten()
+                            .and_then(|path| path.to_str())
                             .map(|path| {
                               if tag_name == "img" {
                                 String::new()
@@ -711,22 +704,22 @@ pub fn escape_code(text: &str) -> String {
 
 pub fn escape_inline_text(text: &str) -> String {
   text
-    .replace("\\", "\\\\")
+    .replace('\\', "\\\\")
     .replace("&amp;", "&")
     .replace("&lt;", "<")
     .replace("&gt;", ">")
-    .replace("{", "\\{")
-    .replace("}", "\\}")
-    .replace("<", "\\<")
-    .replace(">", "\\>")
-    .replace("%", "\\%")
-    .replace("$", "\\$")
-    .replace("#", "\\#")
-    .replace(";", "\\;")
-    .replace("|", "\\|")
-    .replace("*", "\\*")
-    .replace("@", "\\@")
-    .replace("`", "\\`")
+    .replace('{', "\\{")
+    .replace('}', "\\}")
+    .replace('<', "\\<")
+    .replace('>', "\\>")
+    .replace('%', "\\%")
+    .replace('$', "\\$")
+    .replace('#', "\\#")
+    .replace(';', "\\;")
+    .replace('|', "\\|")
+    .replace('*', "\\*")
+    .replace('@', "\\@")
+    .replace('`', "\\`")
 }
 
 fn make_code(is_block: bool, code_str: &str) -> String {

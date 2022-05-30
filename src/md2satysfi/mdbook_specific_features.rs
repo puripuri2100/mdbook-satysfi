@@ -538,7 +538,7 @@ fn text_type_to_string(text_type: &TextType, file_path: &Path) -> Result<String>
 
 fn make_text_with_range_anchor(text: &str) -> Vec<StrWithAnchor> {
   let text_list = text.lines();
-  text_list.map(|s| make_str_with_anchor(s)).collect()
+  text_list.map(make_str_with_anchor).collect()
 }
 
 fn make_str_with_anchor(s: &str) -> StrWithAnchor {
