@@ -33,8 +33,8 @@ mdbook-satysfiによって出力されたファイルを処理するためのク
 - `\p: [inline-text]`：段落を表します。
 - `+code: [string]`：インラインコードを表します。
 - `\code: [string]`：インラインコードを表します。
-- `+code-block: [string option; string]`：ブロックコードを表します。一つ目の引数は指定された言語を表します。
-- `\code-block: [string option; string]`：ブロックコードを表します。一つ目の引数は指定された言語を表します。
+- `+code-block: [string option; string option; string]`：ブロックコードを表します。一つ目の引数は指定された言語を表し、二つ目の引数はカラーテーマを表します。ここに与えられる値は`book.toml`に`color-theme = "theme name"`と表記されると変更可能です。
+- `\code-block: [string option; string option; string]`：同上
 - `\href: [string; inline-text]`：リンクを表します。
 - `+img: [string; inline-text]`：画像挿入を表します。二つ目の引数はキャプションです。
 - `\img: [string; inline-text]`：画像挿入を表します。二つ目の引数はキャプションです。
