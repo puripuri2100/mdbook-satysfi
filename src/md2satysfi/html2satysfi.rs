@@ -607,6 +607,9 @@ const DEFAULT_HTML_CONFIG: &str = r#"
   [[code-block.attribute]]
   "name" = "lang"
   "type" = "string option"
+  [[code-block.attribute]]
+  "name" = "theme"
+  "type" = "string option"
 [a]
   command_name="href"
   children_type="inline"

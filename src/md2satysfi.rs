@@ -11,6 +11,7 @@ pub fn md_to_satysfi_code(
   file_path: &Path,
   ch_file_path: &Path,
   html_cfg: &map::Map<String, toml::Value>,
+  code_theme: &Option<&str>,
 ) -> Result<String> {
   let mut options = Options::empty();
   options.insert(Options::ENABLE_TABLES);
@@ -37,7 +38,16 @@ pub fn md_to_satysfi_code(
       Event::Html(html_tag.into())
     }
     Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(lang))) => {
-      Event::Html(format!(r#"<div class="code-block" lang="{}">"#, lang).into())
+      let code_theme_str = code_theme
+        .map(|theme| format!(r#" theme="{}""#, theme))
+        .unwrap_or_default();
+      Event::Html(
+        format!(
+          r#"<div class="code-block" lang="{}"{}>"#,
+          lang, code_theme_str
+        )
+        .into(),
+      )
     }
     Event::Start(Tag::CodeBlock(CodeBlockKind::Indented)) => {
       Event::Html((r#"<div class="code-block">"#).into())
