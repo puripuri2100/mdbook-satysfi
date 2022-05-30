@@ -58,8 +58,8 @@ fn main() -> Result<()> {
   };
   let pdf_toml_value_opt = &cfg.get("output.satysfi.pdf");
   let pdf_cfg_opt = match (
-    pdf_toml_value_opt.map(|v| v.as_bool()).flatten(),
-    pdf_toml_value_opt.map(|v| v.as_table()).flatten(),
+    pdf_toml_value_opt.and_then(|v| v.as_bool()),
+    pdf_toml_value_opt.and_then(|v| v.as_table()),
   ) {
     (_, Some(t)) => Some(t.clone()),
     (Some(b), _) => {
