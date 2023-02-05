@@ -9,7 +9,7 @@ repository = "https://github.com/puripuri2100/mdbook-satysfi"
 keywords = ["book", "markdown", "satysfi", "mdbook"]
 categories = ["encoding"]
 description = "A mdbook backend for generating SATySFi documents."
-exclude = ["tests/*", ".github/*", "target/+"]
+exclude = ["tests/*", "test/*", ".github/*", "target/+"]
 documentation = "https://puripuri2100.github.io/mdbook-satysfi/ja/"
 
 [dependencies]
