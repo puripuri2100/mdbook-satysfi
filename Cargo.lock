@@ -867,7 +867,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-satysfi"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "anyhow",
  "clap",

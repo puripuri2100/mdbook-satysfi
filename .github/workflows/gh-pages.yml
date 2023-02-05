@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     container:
-      image: amutake/satysfi:0.0.6-53-g2867e4d9
+      image: amutake/satysfi:0.0.7-26-g9f4b68ec
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
