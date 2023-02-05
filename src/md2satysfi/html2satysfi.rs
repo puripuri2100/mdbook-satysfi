@@ -110,7 +110,7 @@ fn node_to_satysfi_code(
                   Mode::Code => children_str,
                   _ => {
                     let indent_str = "  ".repeat(indent);
-                    format!("<{}\n{}>", children_str, indent_str)
+                    format!("<{children_str}\n{indent_str}>")
                   }
                 }
               }
@@ -138,7 +138,7 @@ fn node_to_satysfi_code(
                   .collect::<Result<String>>()?;
                 match mode {
                   Mode::Code => children_str,
-                  _ => format!("{{{}}}", children_str),
+                  _ => format!("{{{children_str}}}"),
                 }
               }
               ChildrenType::BlockCode => {
@@ -201,13 +201,13 @@ fn node_to_satysfi_code(
                 let indent_str = "  ".repeat(indent + 1);
                 let mut children_str = String::new();
                 for children_value in children_iter {
-                  children_str.push_str(&format!("\n{}('<{}>);", indent_str, children_value?))
+                  children_str.push_str(&format!("\n{indent_str}('<{}>);", children_value?))
                 }
                 match mode {
                   Mode::Code => children_str,
                   _ => {
                     let indent_str = "  ".repeat(indent);
-                    format!("[{}\n{}];", children_str, indent_str)
+                    format!("[{children_str}\n{indent_str}];")
                   }
                 }
               }
@@ -233,13 +233,13 @@ fn node_to_satysfi_code(
                 let indent_str = "  ".repeat(indent + 1);
                 let mut children_str = String::new();
                 for children_value in children_iter {
-                  children_str.push_str(&format!("\n{}({{{}}});", indent_str, children_value?))
+                  children_str.push_str(&format!("\n{indent_str}({{{}}});", children_value?))
                 }
                 match mode {
                   Mode::Code => children_str,
                   _ => {
                     let indent_str = "  ".repeat(indent);
-                    format!("[{}\n{}];", children_str, indent_str)
+                    format!("[{children_str}\n{indent_str}];")
                   }
                 }
               }
@@ -260,14 +260,12 @@ fn node_to_satysfi_code(
                       AttributeTypeOrOption::Option(_) => match attribute_value_opt {
                         None => Some(String::new()),
                         Some(attribute_value) => {
-                          Some(format!(r#" {}="{}""#, attribute_name, attribute_value))
+                          Some(format!(r#" {attribute_name}="{attribute_value}""#))
                         }
                       },
-                      AttributeTypeOrOption::Normal(_) => {
-                        attribute_value_opt.clone().map(|attribute_value| {
-                          format!(r#" {}="{}""#, attribute_name, attribute_value)
-                        })
-                      }
+                      AttributeTypeOrOption::Normal(_) => attribute_value_opt
+                        .clone()
+                        .map(|attribute_value| format!(r#" {attribute_name}="{attribute_value}""#)),
                     }
                   }
                   _ => {
@@ -277,10 +275,10 @@ fn node_to_satysfi_code(
                         None => Some("(None)".to_string()),
                         Some(attribute_value) => match attribute_type {
                           AttributeType::BlockText => {
-                            Some(format!(r#"(Some('<{}>))"#, attribute_value))
+                            Some(format!(r#"(Some('<{attribute_value}>))"#))
                           }
                           AttributeType::InlineText => {
-                            Some(format!(r#"(Some({{{}}}))"#, attribute_value))
+                            Some(format!(r#"(Some({{{attribute_value}}}))"#))
                           }
                           AttributeType::String => {
                             Some(format!(r#"(Some({}))"#, make_code(false, attribute_value)))
@@ -288,43 +286,41 @@ fn node_to_satysfi_code(
                           AttributeType::Int => attribute_value
                             .parse::<isize>()
                             .ok()
-                            .map(|isize| format!(r#"(Some({}))"#, isize)),
+                            .map(|isize| format!(r#"(Some({isize}))"#)),
                           AttributeType::Bool => attribute_value
                             .parse::<bool>()
                             .ok()
-                            .map(|bool| format!(r#"(Some({}))"#, bool)),
+                            .map(|bool| format!(r#"(Some({bool}))"#)),
                           AttributeType::Link => ch_file_path
                             .parent()
                             .and_then(|path| path.to_str())
                             .map(|path| {
                               format!(
                                 r#"(Some({}))"#,
-                                make_code(false, &format!("{}/{}", path, &attribute_value))
+                                make_code(false, &format!("{path}/{attribute_value}"))
                               )
                             }),
                         },
                       },
                       AttributeTypeOrOption::Normal(attribute_type) => match attribute_value_opt {
                         None => {
-                          eprintln!(r#"Not enough attributes required: "{}""#, tag_name);
+                          eprintln!(r#"Not enough attributes required: "{tag_name}""#);
                           None
                         }
                         Some(attribute_value) => match attribute_type {
-                          AttributeType::BlockText => Some(format!(r#"('<{}>)"#, attribute_value)),
-                          AttributeType::InlineText => {
-                            Some(format!(r#"({{{}}})"#, attribute_value))
-                          }
+                          AttributeType::BlockText => Some(format!(r#"('<{attribute_value}>)"#)),
+                          AttributeType::InlineText => Some(format!(r#"({{{attribute_value}}})"#)),
                           AttributeType::String => {
                             Some(format!(r#"({})"#, make_code(false, attribute_value)))
                           }
                           AttributeType::Int => attribute_value
                             .parse::<isize>()
                             .ok()
-                            .map(|isize| format!(r#"({})"#, isize)),
+                            .map(|isize| format!(r#"({isize})"#)),
                           AttributeType::Bool => attribute_value
                             .parse::<bool>()
                             .ok()
-                            .map(|bool| format!(r#"({})"#, bool)),
+                            .map(|bool| format!(r#"({bool})"#)),
                           AttributeType::Link => ch_file_path
                             .parent()
                             .and_then(|path| path.to_str())
@@ -334,7 +330,7 @@ fn node_to_satysfi_code(
                               } else {
                                 format!(
                                   r#"({})"#,
-                                  make_code(false, &format!("{}/{}", path, &attribute_value))
+                                  make_code(false, &format!("{path}/{attribute_value}"))
                                 )
                               }
                             }),
@@ -351,13 +347,7 @@ fn node_to_satysfi_code(
             Mode::Block => {
               let s = if let Some(attributes_str) = attributes_str_opt {
                 let indent_str = "  ".repeat(indent);
-                format!(
-                  "\n{indent}+{command_name}{attributes_str}{children_str}",
-                  indent = indent_str,
-                  command_name = command_name,
-                  attributes_str = attributes_str,
-                  children_str = children_str
-                )
+                format!("\n{indent_str}+{command_name}{attributes_str}{children_str}")
               } else {
                 String::new()
               };
@@ -365,12 +355,7 @@ fn node_to_satysfi_code(
             }
             Mode::Inline => {
               let s = if let Some(attributes_str) = attributes_str_opt {
-                format!(
-                  " \\{command_name}{attributes_str}{children_str} ",
-                  command_name = command_name,
-                  attributes_str = attributes_str,
-                  children_str = children_str
-                )
+                format!(" \\{command_name}{attributes_str}{children_str} ")
               } else {
                 String::new()
               };
@@ -378,12 +363,7 @@ fn node_to_satysfi_code(
             }
             Mode::Code => {
               let s = if let Some(attributes_str) = attributes_str_opt {
-                format!(
-                  "<{tag_name}{attributes_str}>{children_str}</{tag_name}>",
-                  tag_name = tag_name,
-                  attributes_str = attributes_str,
-                  children_str = children_str
-                )
+                format!("<{tag_name}{attributes_str}>{children_str}</{tag_name}>")
               } else {
                 String::new()
               };
@@ -392,7 +372,7 @@ fn node_to_satysfi_code(
           }
         }
         None => {
-          eprintln!(r#""{}" tag is not supported"#, tag_name);
+          eprintln!(r#""{tag_name}" tag is not supported"#);
           Ok(String::new())
         }
       }
@@ -747,9 +727,9 @@ fn make_code(is_block: bool, code_str: &str) -> String {
   let raw = "`".repeat(i + 1);
   let code = mdbook_specific_features::hiding_code_lines(code_str);
   if is_block {
-    format!("{raw}\n{code}\n{raw}", code = code, raw = raw)
+    format!("{raw}\n{code}\n{raw}")
   } else {
-    format!("{raw} {code} {raw}", code = code, raw = raw)
+    format!("{raw} {code} {raw}")
   }
 }
 
