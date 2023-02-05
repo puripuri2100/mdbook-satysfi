@@ -32,9 +32,9 @@ fn main() -> Result<()> {
   };
 
   let destination = &ctx.destination;
-  let _ = fs::create_dir_all(&destination);
-  let f = File::create(&destination.join(output_file_name))
-    .with_context(|| format!("Cannot make '{}'", output_file_name))?;
+  let _ = fs::create_dir_all(destination);
+  let f = File::create(destination.join(output_file_name))
+    .with_context(|| format!("Cannot make '{output_file_name}'"))?;
   let mut f = BufWriter::new(f);
 
   let source_dir = &ctx.source_dir();
@@ -58,8 +58,8 @@ fn main() -> Result<()> {
   };
   let pdf_toml_value_opt = &cfg.get("output.satysfi.pdf");
   let pdf_cfg_opt = match (
-    pdf_toml_value_opt.map(|v| v.as_bool()).flatten(),
-    pdf_toml_value_opt.map(|v| v.as_table()).flatten(),
+    pdf_toml_value_opt.and_then(|v| v.as_bool()),
+    pdf_toml_value_opt.and_then(|v| v.as_table()),
   ) {
     (_, Some(t)) => Some(t.clone()),
     (Some(b), _) => {
@@ -90,11 +90,7 @@ fn main() -> Result<()> {
     Some(language) => {
       let n = md2satysfi::html2satysfi::count_accent_in_inline_text(&language);
       let raw = "`".repeat(n + 1);
-      format!(
-        "Some({raw} {language} {raw})",
-        raw = raw,
-        language = language
-      )
+      format!("Some({raw} {language} {raw})",)
     }
   };
 
@@ -128,7 +124,7 @@ fn main() -> Result<()> {
             eprintln!(r#""output.satysfi.require-packages" require type "string array""#);
             String::new()
           } else {
-            new.iter().map(|s| format!("@require: {}\n", s)).collect()
+            new.iter().map(|s| format!("@require: {s}\n")).collect()
           }
         })
       };
@@ -153,7 +149,7 @@ fn main() -> Result<()> {
             eprintln!(r#""output.satysfi.import-packages" require type "string array""#);
             String::new()
           } else {
-            new.iter().map(|s| format!("@import: {}\n", s)).collect()
+            new.iter().map(|s| format!("@import: {s}\n")).collect()
           }
         })
       };
@@ -164,27 +160,21 @@ fn main() -> Result<()> {
     })
     .unwrap_or_default();
 
+  let code_theme = &satysfi_cfg.get("code-theme").and_then(|v| v.as_str());
+
   f.write_all(
     format!(
       "@{class_file_import_type}: {class_file_name}
-{require_packages}
-{import_packages}
+{require_packages_str}
+{import_packages_str}
 
 
 document (|
   title = {{{title}}};
   authors = [{authors}];
-  description = ({description_opt});
-  language = ({language_opt});
-|) '<",
-      class_file_import_type = class_file_import_type,
-      class_file_name = class_file_name,
-      require_packages = require_packages_str,
-      import_packages = import_packages_str,
-      title = title,
-      authors = authors,
-      description_opt = description_opt_str,
-      language_opt = language_opt_str,
+  description = ({description_opt_str});
+  language = ({language_opt_str});
+|) '<"
     )
     .as_bytes(),
   )?;
@@ -192,7 +182,7 @@ document (|
   ctx
     .book
     .iter()
-    .try_for_each(|item| write_bookitme(&mut f, item, source_dir, &html_cfg))?;
+    .try_for_each(|item| write_bookitme(&mut f, item, source_dir, &html_cfg, code_theme))?;
 
   f.write_all(b"\n>\n")?;
   f.flush()?;
@@ -208,6 +198,7 @@ fn write_bookitme(
   item: &BookItem,
   root: &Path,
   html_cfg: &map::Map<String, toml::Value>,
+  code_theme: &Option<&str>,
 ) -> Result<()> {
   let indent_str = "  ".to_string();
   match item {
@@ -221,17 +212,14 @@ fn write_bookitme(
         Some(numbers) => {
           let mut s = String::new();
           for n in numbers.iter() {
-            s.push_str(&format!("{};", n))
+            s.push_str(&format!("{n};"))
           }
-          format!("Some([{}])", s)
+          format!("Some([{s}])")
         }
       };
       f.write_all(
         format!(
-          "\n\n{indent}+Chapter ({numbers}) ({depth}) {{{name}}} <",
-          indent = indent_str,
-          numbers = numbers_str,
-          depth = depth,
+          "\n\n{indent_str}+Chapter ({numbers_str}) ({depth}) {{{name}}} <",
           name = md2satysfi::html2satysfi::escape_inline_text(&ch_name)
         )
         .as_bytes(),
@@ -241,15 +229,20 @@ fn write_bookitme(
         None => (),
         Some(ch_file_path) => {
           let path = root.join(&ch_file_path);
-          let s =
-            md2satysfi::md_to_satysfi_code(ch.clone().content, &path, &ch_file_path, html_cfg)?;
+          let s = md2satysfi::md_to_satysfi_code(
+            ch.clone().content,
+            &path,
+            &ch_file_path,
+            html_cfg,
+            code_theme,
+          )?;
           f.write_all(s.as_bytes())?
         }
       };
-      f.write_all(format!("\n{}>", indent_str).as_bytes())?;
+      f.write_all(format!("\n{indent_str}>").as_bytes())?;
     }
     BookItem::Separator => {
-      f.write_all(format!("\n\n{indent}+Separator;", indent = indent_str).as_bytes())?;
+      f.write_all(format!("\n\n{indent_str}+Separator;").as_bytes())?;
     }
     BookItem::PartTitle(title) => {
       f.write_all(

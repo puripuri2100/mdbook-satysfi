@@ -437,7 +437,7 @@ fn text_type_to_string(text_type: &TextType, file_path: &Path) -> Result<String>
         .with_context(|| "Cannot parent file path")?
         .join(link_type.clone().path);
       let text =
-        fs::read_to_string(&path).with_context(|| format!("Cannote read file: {:?}", path))?;
+        fs::read_to_string(&path).with_context(|| format!("Cannote read file: {path:?}"))?;
       let text_lines_len = text.lines().count();
       let text_lines = text.lines();
       let text_with_range_name = make_text_with_range_anchor(&text);
@@ -460,7 +460,7 @@ fn text_type_to_string(text_type: &TextType, file_path: &Path) -> Result<String>
               }
               StrWithAnchor::Str(str) => {
                 if b {
-                  s.push_str(&format!("{}\n", str))
+                  s.push_str(&format!("{str}\n"))
                 }
               }
             }
@@ -473,7 +473,7 @@ fn text_type_to_string(text_type: &TextType, file_path: &Path) -> Result<String>
           text_lines
             .enumerate()
             .filter(|(i, _)| start <= i + 1 && i < &end)
-            .map(|(_, s)| format!("{}\n", s))
+            .map(|(_, s)| format!("{s}\n"))
             .collect()
         }
       }
@@ -484,7 +484,7 @@ fn text_type_to_string(text_type: &TextType, file_path: &Path) -> Result<String>
         .with_context(|| "Cannot parent file path")?
         .join(link_type.clone().path);
       let text =
-        fs::read_to_string(&path).with_context(|| format!("Cannote read file: {:?}", path))?;
+        fs::read_to_string(&path).with_context(|| format!("Cannote read file: {path:?}"))?;
       let text_with_range_name = make_text_with_range_anchor(&text);
       let range = link_type.clone().range;
       match range {
@@ -505,9 +505,9 @@ fn text_type_to_string(text_type: &TextType, file_path: &Path) -> Result<String>
               }
               StrWithAnchor::Str(str) => {
                 if b {
-                  s.push_str(&format!("{}\n", str))
+                  s.push_str(&format!("{str}\n"))
                 } else {
-                  s.push_str(&format!("#{}\n", str))
+                  s.push_str(&format!("#{str}\n"))
                 }
               }
             }
@@ -523,9 +523,9 @@ fn text_type_to_string(text_type: &TextType, file_path: &Path) -> Result<String>
             .enumerate()
             .map(|(i, s)| {
               if start <= i + 1 && i < end {
-                format!("{}\n", s)
+                format!("{s}\n")
               } else {
-                format!("#{}\n", s)
+                format!("#{s}\n")
               }
             })
             .collect()
@@ -600,7 +600,7 @@ pub fn hiding_code_lines(text: &str) -> String {
       if i == len - 1 {
         text.to_string()
       } else {
-        format!("{}\n", text)
+        format!("{text}\n")
       }
     })
     .filter(|text| !matches!(text.chars().next(), Some('#')))
